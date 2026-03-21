@@ -1,0 +1,50 @@
+
+> ai-job-seeking-assistant@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.0 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.31.117:3000
+- Environments: .env.local
+✓ Ready in 355ms
+Creating turbopack project {
+  dir: 'D:\\liuhc\\vibe coding\\AI-Job-seeking-assistant',
+  testMode: true
+}
+
+ GET /api/health 200 in 233ms (next.js: 217ms, application-code: 17ms)
+ POST /api/auth/register 400 in 280ms (next.js: 273ms, application-code: 7ms)
+ POST /api/auth/callback/credentials 200 in 800ms (next.js: 787ms, application-code: 13ms)
+ GET /api/auth/session 200 in 19ms (next.js: 6ms, application-code: 13ms)
+ PUT /api/profile 401 in 169ms (next.js: 161ms, application-code: 8ms)
+ POST /api/profile/educations 401 in 139ms (next.js: 128ms, application-code: 11ms)
+ POST /api/profile/projects 401 in 136ms (next.js: 123ms, application-code: 13ms)
+ POST /api/profile/skills 401 in 125ms (next.js: 117ms, application-code: 7ms)
+ POST /api/profile/skills 401 in 25ms (next.js: 1796µs, application-code: 24ms)
+ POST /api/resumes 401 in 169ms (next.js: 159ms, application-code: 10ms)
+ GET / 200 in 2.1s (next.js: 1893ms, application-code: 161ms)
+ POST /api/auth/register 201 in 353ms (next.js: 2ms, application-code: 351ms)
+ GET /api/auth/csrf 200 in 14ms (next.js: 7ms, application-code: 7ms)
+ POST /api/auth/callback/credentials 200 in 252ms (next.js: 3ms, application-code: 249ms)
+ GET /api/auth/session 200 in 11ms (next.js: 1992µs, application-code: 9ms)
+ PUT /api/profile 200 in 40ms (next.js: 1664µs, application-code: 39ms)
+ POST /api/profile/educations 201 in 34ms (next.js: 2ms, application-code: 32ms)
+ POST /api/profile/projects 201 in 32ms (next.js: 2ms, application-code: 30ms)
+ POST /api/profile/skills 201 in 24ms (next.js: 1991µs, application-code: 22ms)
+ POST /api/profile/skills 201 in 23ms (next.js: 1834µs, application-code: 22ms)
+ POST /api/resumes 400 in 20ms (next.js: 1858µs, application-code: 19ms)
+ GET / 200 in 48ms (next.js: 2ms, application-code: 45ms)
+ POST /api/auth/register 201 in 219ms (next.js: 1869µs, application-code: 217ms)
+ GET /api/auth/csrf 200 in 15ms (next.js: 8ms, application-code: 7ms)
+ POST /api/auth/callback/credentials 200 in 242ms (next.js: 1481µs, application-code: 240ms)
+ GET /api/auth/session 200 in 12ms (next.js: 1426µs, application-code: 10ms)
+ PUT /api/profile 200 in 24ms (next.js: 1502µs, application-code: 23ms)
+ POST /api/profile/educations 201 in 23ms (next.js: 1814µs, application-code: 21ms)
+ POST /api/profile/projects 201 in 25ms (next.js: 1366µs, application-code: 23ms)
+ POST /api/profile/skills 201 in 24ms (next.js: 1751µs, application-code: 22ms)
+ POST /api/profile/skills 201 in 24ms (next.js: 1981µs, application-code: 22ms)
+ POST /api/resumes 201 in 47ms (next.js: 1955µs, application-code: 46ms)
+ POST /api/resumes/76684a19-1d8e-4744-bc0a-2cf627a389c4/versions/7c8d793d-03bb-476f-900a-158f9d0a7832/diagnose 201 in 737ms (next.js: 710ms, application-code: 27ms)
+ POST /api/resumes/76684a19-1d8e-4744-bc0a-2cf627a389c4/versions/7c8d793d-03bb-476f-900a-158f9d0a7832/export/md 201 in 738ms (next.js: 702ms, application-code: 36ms)
+ GET /api/exports/16721461-f9d5-41b5-b9f1-4870833323b9 200 in 698ms (next.js: 680ms, application-code: 18ms)
+^C^C

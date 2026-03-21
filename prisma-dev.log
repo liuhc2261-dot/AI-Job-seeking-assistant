@@ -1,0 +1,23 @@
+[dotenv@17.3.1] injecting env (11) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+[dotenv@17.3.1] injecting env (0) from .env -- tip: 🤖 agentic secret storage: https://dotenvx.com/as2
+Loaded Prisma config from prisma.config.ts.
+
+Fetching latest updates for this subcommand...
+[36m-[39m  Starting [7m[8m_[28mprisma dev[8m_[28m[27m server [36mdefault[39m...
+
+
+
+
+
+
+[32m√[39m  Your local Prisma Postgres server [36mdefault[39m is now running 👍
+
+🔌 To connect with Prisma ORM use the following connection strings:
+
+   [36mDATABASE_URL[39m="[35mpostgres:[39m[37m//postgres:postgres@[39m[36mlocalhost[39m[37m:[39m[36m51214[39m[37m/template1[39m[37m?sslmode=disable&connection_limit=10&connect_timeout=0&max_idle_connection_lifetime=0&pool_timeout=0&socket_timeout=0[39m"
+   [36mSHADOW_DATABASE_URL[39m="[35mpostgres:[39m[37m//postgres:postgres@[39m[36mlocalhost[39m[37m:[39m[36m51215[39m[37m/template1[39m[37m?sslmode=disable&connection_limit=10&connect_timeout=0&max_idle_connection_lifetime=0&pool_timeout=0&socket_timeout=0[39m"
+
+🐘 You can also use the [36mDATABASE_URL[39m with the [36mpg[39m or [36mpostgres.js[39m JavaScript drivers as well as your favorite DB gui.
+
+   For the best experience, set the maximum number of connections to [36m10[39m, connect timeout to [36m0[39m and
+   idle timeout to the smallest positive value supported.
