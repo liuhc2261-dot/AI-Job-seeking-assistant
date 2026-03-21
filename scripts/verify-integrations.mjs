@@ -18,6 +18,64 @@ function previewText(value, maxLength = 160) {
   return value.length > maxLength ? `${value.slice(0, maxLength)}...` : value;
 }
 
+async function verifyPdfBrowser() {
+  const { access } = await import("node:fs/promises");
+  const candidates = [
+    readEnv("PUPPETEER_EXECUTABLE_PATH"),
+    "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
+    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    try {
+      await access(candidate);
+
+      return {
+        name: "pdfBrowser",
+        status: "ok",
+        detail: "found browser executable for PDF export",
+        executablePath: candidate,
+      };
+    } catch {
+      continue;
+    }
+  }
+
+  return {
+    name: "pdfBrowser",
+    status: "missing",
+    detail: "no usable Chrome/Edge executable found for PDF export",
+  };
+}
+
+function verifyLocalReadiness() {
+  return [
+    {
+      name: "databaseUrl",
+      status: readEnv("DATABASE_URL") ? "ok" : "missing",
+      detail: readEnv("DATABASE_URL")
+        ? "DATABASE_URL configured"
+        : "DATABASE_URL is empty",
+    },
+    {
+      name: "authSecret",
+      status: readEnv("AUTH_SECRET") ? "ok" : "missing",
+      detail: readEnv("AUTH_SECRET")
+        ? "AUTH_SECRET configured"
+        : "AUTH_SECRET is empty",
+    },
+    {
+      name: "appUrl",
+      status: readEnv("NEXT_PUBLIC_APP_URL") ? "ok" : "missing",
+      detail: readEnv("NEXT_PUBLIC_APP_URL")
+        ? "NEXT_PUBLIC_APP_URL configured"
+        : "NEXT_PUBLIC_APP_URL is empty",
+    },
+  ];
+}
+
 async function verifyOpenAi() {
   const apiKey = readEnv("OPENAI_API_KEY");
   const model = readEnv("OPENAI_MODEL", "gpt-4.1-mini");
@@ -166,9 +224,9 @@ async function verifyPostHog() {
 
 async function main() {
   const startedAt = new Date().toISOString();
-  const checks = [];
+  const checks = [...verifyLocalReadiness()];
 
-  for (const verify of [verifyOpenAi, verifySentry, verifyPostHog]) {
+  for (const verify of [verifyOpenAi, verifySentry, verifyPostHog, verifyPdfBrowser]) {
     try {
       checks.push(await verify());
     } catch (error) {

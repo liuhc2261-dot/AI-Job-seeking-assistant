@@ -48,34 +48,41 @@ export function ForgotPasswordForm() {
       return;
     }
 
-    const response = await fetch("/api/auth/forgot-password", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(parsedInput.data),
-    });
-    const payload = (await response.json().catch(() => null)) as
-      | ForgotPasswordSuccessPayload
-      | ForgotPasswordFailurePayload
-      | null;
+    try {
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(parsedInput.data),
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | ForgotPasswordSuccessPayload
+        | ForgotPasswordFailurePayload
+        | null;
 
-    if (!response.ok || !payload?.success) {
+      if (!response.ok || !payload?.success) {
+        setState({
+          email: parsedInput.data.email,
+          message:
+            payload && !payload.success
+              ? payload.error?.message ?? "找回密码请求失败，请稍后重试。"
+              : "找回密码请求失败，请稍后重试。",
+        });
+        return;
+      }
+
       setState({
         email: parsedInput.data.email,
-        message:
-          payload && !payload.success
-            ? payload.error?.message ?? "找回密码请求失败，请稍后重试。"
-            : "找回密码请求失败，请稍后重试。",
+        message: "如果该邮箱已注册，我们已经生成了重置密码入口。",
+        developmentResetLink: payload.data.developmentResetLink ?? null,
       });
-      return;
+    } catch {
+      setState({
+        email: parsedInput.data.email,
+        message: "找回密码请求失败，请检查网络后重试。",
+      });
     }
-
-    setState({
-      email: parsedInput.data.email,
-      message: "如果该邮箱已注册，我们已经生成了重置密码入口。",
-      developmentResetLink: payload.data.developmentResetLink ?? null,
-    });
   }
 
   return (

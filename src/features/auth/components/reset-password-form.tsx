@@ -49,32 +49,38 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       return;
     }
 
-    const response = await fetch("/api/auth/reset-password", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(parsedInput.data),
-    });
-    const payload = (await response.json().catch(() => null)) as
-      | ResetPasswordSuccessPayload
-      | ResetPasswordFailurePayload
-      | null;
-
-    if (!response.ok || !payload?.success) {
-      setState({
-        message:
-          payload && !payload.success
-            ? payload.error?.message ?? "重置密码失败，请稍后重试。"
-            : "重置密码失败，请稍后重试。",
+    try {
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(parsedInput.data),
       });
-      return;
-    }
+      const payload = (await response.json().catch(() => null)) as
+        | ResetPasswordSuccessPayload
+        | ResetPasswordFailurePayload
+        | null;
 
-    setState({
-      success: true,
-      message: "密码已重置成功，请使用新密码重新登录。",
-    });
+      if (!response.ok || !payload?.success) {
+        setState({
+          message:
+            payload && !payload.success
+              ? payload.error?.message ?? "重置密码失败，请稍后重试。"
+              : "重置密码失败，请稍后重试。",
+        });
+        return;
+      }
+
+      setState({
+        success: true,
+        message: "密码已重置成功，请使用新密码重新登录。",
+      });
+    } catch {
+      setState({
+        message: "重置密码失败，请检查网络后重试。",
+      });
+    }
   }
 
   if (!token) {

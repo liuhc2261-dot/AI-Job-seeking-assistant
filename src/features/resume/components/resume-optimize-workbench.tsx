@@ -85,40 +85,47 @@ export function ResumeOptimizeWorkbench({
       void (async () => {
         setNotice(null);
 
-        const response = await fetch("/api/jd/parse", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+        try {
+          const response = await fetch("/api/jd/parse", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              resumeId,
+              resumeVersionId: sourceVersion.id,
+              jdText,
+            }),
+          });
+          const payload = (await response.json()) as
+            | ApiSuccess<JDAnalysisRecord>
+            | ApiFailure;
+
+          if (!payload.success) {
+            setNotice({
+              type: "error",
+              message: payload.error.message,
+            });
+            return;
+          }
+
+          setAnalysis(payload.data);
+          setGeneratedVersion(null);
+          setNotice({
+            type: "success",
+            message: "JD 已解析完成，可以继续生成岗位定制版本。",
+          });
+          captureAnalyticsEvent(telemetryEvents.jdParseSuccess, {
             resumeId,
             resumeVersionId: sourceVersion.id,
-            jdText,
-          }),
-        });
-        const payload = (await response.json()) as
-          | ApiSuccess<JDAnalysisRecord>
-          | ApiFailure;
-
-        if (!payload.success) {
+            analysisId: payload.data.id,
+          });
+        } catch {
           setNotice({
             type: "error",
-            message: payload.error.message,
+            message: "JD 解析失败，请检查网络后重试。",
           });
-          return;
         }
-
-        setAnalysis(payload.data);
-        setGeneratedVersion(null);
-        setNotice({
-          type: "success",
-          message: "JD 已解析完成，可以继续生成岗位定制版本。",
-        });
-        captureAnalyticsEvent(telemetryEvents.jdParseSuccess, {
-          resumeId,
-          resumeVersionId: sourceVersion.id,
-          analysisId: payload.data.id,
-        });
       })();
     });
   }
@@ -136,50 +143,57 @@ export function ResumeOptimizeWorkbench({
       void (async () => {
         setNotice(null);
 
-        const response = await fetch(
-          `/api/resumes/${resumeId}/versions/${sourceVersion.id}/optimize`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
+        try {
+          const response = await fetch(
+            `/api/resumes/${resumeId}/versions/${sourceVersion.id}/optimize`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                analysisId: analysis.id,
+              }),
             },
-            body: JSON.stringify({
-              analysisId: analysis.id,
-            }),
-          },
-        );
-        const payload = (await response.json()) as
-          | ApiSuccess<ResumeWorkspace>
-          | ApiFailure;
+          );
+          const payload = (await response.json()) as
+            | ApiSuccess<ResumeWorkspace>
+            | ApiFailure;
 
-        if (!payload.success || !payload.data.currentVersion) {
+          if (!payload.success || !payload.data.currentVersion) {
+            setNotice({
+              type: "error",
+              message: payload.success
+                ? "岗位版本生成失败，请稍后重试。"
+                : payload.error.message,
+            });
+            return;
+          }
+
+          setWorkspace(payload.data);
+          setGeneratedVersion(payload.data.currentVersion);
+          setNotice({
+            type: "success",
+            message: "岗位定制版本已生成，差异和新版本预览已更新。",
+          });
+          captureAnalyticsEvent(telemetryEvents.resumeOptimizeSuccess, {
+            resumeId,
+            resumeVersionId: payload.data.currentVersion.id,
+            analysisId: analysis.id,
+          });
+          trackVersionCreated({
+            source: "resume_optimize",
+            resumeId,
+            versionId: payload.data.currentVersion.id,
+            versionType: payload.data.currentVersion.versionType,
+          });
+          router.refresh();
+        } catch {
           setNotice({
             type: "error",
-            message: payload.success
-              ? "岗位版本生成失败，请稍后重试。"
-              : payload.error.message,
+            message: "岗位版本生成失败，请检查网络后重试。",
           });
-          return;
         }
-
-        setWorkspace(payload.data);
-        setGeneratedVersion(payload.data.currentVersion);
-        setNotice({
-          type: "success",
-          message: "岗位定制版本已生成，差异和新版本预览已更新。",
-        });
-        captureAnalyticsEvent(telemetryEvents.resumeOptimizeSuccess, {
-          resumeId,
-          resumeVersionId: payload.data.currentVersion.id,
-          analysisId: analysis.id,
-        });
-        trackVersionCreated({
-          source: "resume_optimize",
-          resumeId,
-          versionId: payload.data.currentVersion.id,
-          versionType: payload.data.currentVersion.versionType,
-        });
-        router.refresh();
       })();
     });
   }

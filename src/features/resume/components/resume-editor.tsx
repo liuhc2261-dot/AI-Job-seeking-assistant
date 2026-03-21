@@ -83,37 +83,44 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
       void (async () => {
         setNotice(null);
 
-        const response = await fetch(
-          `/api/resumes/${resumeId}/versions/${currentVersion.id}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
+        try {
+          const response = await fetch(
+            `/api/resumes/${resumeId}/versions/${currentVersion.id}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                contentJson: draft,
+              }),
             },
-            body: JSON.stringify({
-              contentJson: draft,
-            }),
-          },
-        );
-        const payload = (await response.json()) as ResumeWorkspaceResponse;
+          );
+          const payload = (await response.json()) as ResumeWorkspaceResponse;
 
-        if (!payload.success || !payload.data.currentVersion) {
+          if (!payload.success || !payload.data.currentVersion) {
+            setNotice({
+              type: "error",
+              message: payload.success
+                ? "保存失败，请稍后重试。"
+                : payload.error.message,
+            });
+            return;
+          }
+
+          setCurrentVersion(payload.data.currentVersion);
+          setDraft(payload.data.currentVersion.contentJson);
+          setNotice({
+            type: "success",
+            message: "已保存为新的手动版本，母版历史没有被覆盖。",
+          });
+          router.refresh();
+        } catch {
           setNotice({
             type: "error",
-            message: payload.success
-              ? "保存失败，请稍后重试。"
-              : payload.error.message,
+            message: "保存失败，请检查网络后重试。",
           });
-          return;
         }
-
-        setCurrentVersion(payload.data.currentVersion);
-        setDraft(payload.data.currentVersion.contentJson);
-        setNotice({
-          type: "success",
-          message: "已保存为新的手动版本，母版历史没有被覆盖。",
-        });
-        router.refresh();
       })();
     });
   }

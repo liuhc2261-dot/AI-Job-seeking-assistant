@@ -3,6 +3,7 @@ import {
   getResumeApiErrorResponse,
 } from "@/lib/api/resume";
 import { apiError, apiOk } from "@/lib/http";
+import { createApiRequestLogger } from "@/lib/monitoring/request-logger";
 import { resumeService } from "@/services/resume-service";
 
 type ResumeVersionCopyRouteProps = {
@@ -12,11 +13,21 @@ type ResumeVersionCopyRouteProps = {
   }>;
 };
 
-export async function POST(_: Request, { params }: ResumeVersionCopyRouteProps) {
+export async function POST(
+  request: Request,
+  { params }: ResumeVersionCopyRouteProps,
+) {
+  const requestLog = createApiRequestLogger({
+    request,
+    route: "POST /api/resumes/[resumeId]/versions/[versionId]/copy",
+    taskType: "resume_version_copy",
+  });
   const userId = await getAuthenticatedResumeUserId();
 
   if (!userId) {
-    return apiError("请先登录。", 401);
+    return requestLog.finalize({
+      response: apiError("请先登录。", 401),
+    });
   }
 
   const { resumeId, versionId } = await params;
@@ -24,8 +35,23 @@ export async function POST(_: Request, { params }: ResumeVersionCopyRouteProps) 
   try {
     const result = await resumeService.copyVersion(userId, resumeId, versionId);
 
-    return apiOk(result, { status: 201 });
+    return requestLog.finalize({
+      response: apiOk(result, { status: 201 }),
+      userId,
+      extra: {
+        resumeId,
+        sourceVersionId: versionId,
+        createdVersionId: result.createdVersionId,
+      },
+    });
   } catch (error) {
-    return getResumeApiErrorResponse(error);
+    return requestLog.finalize({
+      response: getResumeApiErrorResponse(error),
+      userId,
+      extra: {
+        resumeId,
+        sourceVersionId: versionId,
+      },
+    });
   }
 }

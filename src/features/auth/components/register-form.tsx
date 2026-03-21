@@ -60,56 +60,63 @@ export function RegisterForm() {
       return;
     }
 
-    const response = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(parsedInput.data),
-    });
-    const payload = (await response.json().catch(() => null)) as
-      | RegisterSuccessPayload
-      | RegisterFailurePayload
-      | null;
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(parsedInput.data),
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | RegisterSuccessPayload
+        | RegisterFailurePayload
+        | null;
 
-    if (!response.ok || !payload?.success) {
-      const errorMessage =
-        payload && !payload.success
-          ? payload.error?.message ?? "注册失败，请稍后重试。"
-          : "注册失败，请稍后重试。";
+      if (!response.ok || !payload?.success) {
+        const errorMessage =
+          payload && !payload.success
+            ? payload.error?.message ?? "注册失败，请稍后重试。"
+            : "注册失败，请稍后重试。";
 
+        setState({
+          email: parsedInput.data.email,
+          message: errorMessage,
+        });
+        return;
+      }
+
+      identifyAnalyticsUser({
+        id: payload.data.id,
+        email: payload.data.email,
+      });
+      captureAnalyticsEvent(telemetryEvents.registerSuccess, {
+        source: "register_form",
+      });
+
+      const result = await signIn("credentials", {
+        email: parsedInput.data.email,
+        password: parsedInput.data.password,
+        redirect: false,
+        callbackUrl: "/dashboard",
+      });
+
+      if (result?.error) {
+        setState({
+          email: parsedInput.data.email,
+          message: "注册成功后自动登录失败，请手动登录。",
+        });
+        return;
+      }
+
+      router.push(result?.url ?? "/dashboard");
+      router.refresh();
+    } catch {
       setState({
         email: parsedInput.data.email,
-        message: errorMessage,
+        message: "注册失败，请检查网络后重试。",
       });
-      return;
     }
-
-    identifyAnalyticsUser({
-      id: payload.data.id,
-      email: payload.data.email,
-    });
-    captureAnalyticsEvent(telemetryEvents.registerSuccess, {
-      source: "register_form",
-    });
-
-    const result = await signIn("credentials", {
-      email: parsedInput.data.email,
-      password: parsedInput.data.password,
-      redirect: false,
-      callbackUrl: "/dashboard",
-    });
-
-    if (result?.error) {
-      setState({
-        email: parsedInput.data.email,
-        message: "注册成功后自动登录失败，请手动登录。",
-      });
-      return;
-    }
-
-    router.push(result?.url ?? "/dashboard");
-    router.refresh();
   }
 
   return (

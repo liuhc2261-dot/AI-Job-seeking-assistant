@@ -62,43 +62,50 @@ export function ResumeHub({ initialData }: ResumeHubProps) {
       void (async () => {
         setNotice(null);
 
-        const response = await fetch("/api/resumes", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            style: selectedStyle,
-          }),
-        });
-        const payload = (await response.json()) as ResumeWorkspaceResponse;
+        try {
+          const response = await fetch("/api/resumes", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              style: selectedStyle,
+            }),
+          });
+          const payload = (await response.json()) as ResumeWorkspaceResponse;
 
-        if (!payload.success) {
+          if (!payload.success) {
+            setNotice({
+              type: "error",
+              message: payload.error.message,
+            });
+            return;
+          }
+
+          setNotice({
+            type: "success",
+            message: "母版简历已生成，正在跳转到详情页。",
+          });
+          captureAnalyticsEvent(telemetryEvents.resumeGenerateSuccess, {
+            resumeId: payload.data.resume.id,
+            style: selectedStyle,
+          });
+          if (payload.data.currentVersion) {
+            trackVersionCreated({
+              source: "resume_generate",
+              resumeId: payload.data.resume.id,
+              versionId: payload.data.currentVersion.id,
+              versionType: payload.data.currentVersion.versionType,
+            });
+          }
+          router.push(`/resumes/${payload.data.resume.id}`);
+          router.refresh();
+        } catch {
           setNotice({
             type: "error",
-            message: payload.error.message,
-          });
-          return;
-        }
-
-        setNotice({
-          type: "success",
-          message: "母版简历已生成，正在跳转到详情页。",
-        });
-        captureAnalyticsEvent(telemetryEvents.resumeGenerateSuccess, {
-          resumeId: payload.data.resume.id,
-          style: selectedStyle,
-        });
-        if (payload.data.currentVersion) {
-          trackVersionCreated({
-            source: "resume_generate",
-            resumeId: payload.data.resume.id,
-            versionId: payload.data.currentVersion.id,
-            versionType: payload.data.currentVersion.versionType,
+            message: "母版简历生成失败，请检查网络后重试。",
           });
         }
-        router.push(`/resumes/${payload.data.resume.id}`);
-        router.refresh();
       })();
     });
   }

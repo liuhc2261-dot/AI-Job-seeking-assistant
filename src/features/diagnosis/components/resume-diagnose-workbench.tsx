@@ -182,43 +182,50 @@ export function ResumeDiagnoseWorkbench({
       void (async () => {
         setNotice(null);
 
-        const response = await fetch(
-          `/api/resumes/${resumeId}/versions/${sourceVersion.id}/diagnose`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
+        try {
+          const response = await fetch(
+            `/api/resumes/${resumeId}/versions/${sourceVersion.id}/diagnose`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                analysisId: analysis?.id,
+              }),
             },
-            body: JSON.stringify({
-              analysisId: analysis?.id,
-            }),
-          },
-        );
-        const payload = (await response.json()) as
-          | ApiSuccess<DiagnosisReportRecord>
-          | ApiFailure;
+          );
+          const payload = (await response.json()) as
+            | ApiSuccess<DiagnosisReportRecord>
+            | ApiFailure;
 
-        if (!payload.success) {
+          if (!payload.success) {
+            setNotice({
+              type: "error",
+              message: payload.error.message,
+            });
+            return;
+          }
+
+          setReport(payload.data);
+          setAppliedVersion(null);
+          setSelectedSuggestionIds(getAutoApplicableSuggestionIds(payload.data));
+          captureAnalyticsEvent(telemetryEvents.diagnoseSuccess, {
+            resumeId,
+            resumeVersionId: sourceVersion.id,
+            reportId: payload.data.id,
+            analysisId: analysis?.id ?? null,
+          });
+          setNotice({
+            type: "success",
+            message: "诊断已完成，问题分类和建议列表已更新。",
+          });
+        } catch {
           setNotice({
             type: "error",
-            message: payload.error.message,
+            message: "简历诊断失败，请检查网络后重试。",
           });
-          return;
         }
-
-        setReport(payload.data);
-        setAppliedVersion(null);
-        setSelectedSuggestionIds(getAutoApplicableSuggestionIds(payload.data));
-        captureAnalyticsEvent(telemetryEvents.diagnoseSuccess, {
-          resumeId,
-          resumeVersionId: sourceVersion.id,
-          reportId: payload.data.id,
-          analysisId: analysis?.id ?? null,
-        });
-        setNotice({
-          type: "success",
-          message: "诊断已完成，问题分类和建议列表已更新。",
-        });
       })();
     });
   }
@@ -244,45 +251,52 @@ export function ResumeDiagnoseWorkbench({
       void (async () => {
         setNotice(null);
 
-        const response = await fetch("/api/diagnose/apply", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            resumeId,
-            resumeVersionId: sourceVersion.id,
-            reportId: report.id,
-            suggestionIds: selectedSuggestionIds,
-          }),
-        });
-        const payload = (await response.json()) as
-          | ApiSuccess<DiagnosisApplyResponse>
-          | ApiFailure;
+        try {
+          const response = await fetch("/api/diagnose/apply", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              resumeId,
+              resumeVersionId: sourceVersion.id,
+              reportId: report.id,
+              suggestionIds: selectedSuggestionIds,
+            }),
+          });
+          const payload = (await response.json()) as
+            | ApiSuccess<DiagnosisApplyResponse>
+            | ApiFailure;
 
-        if (!payload.success || !payload.data.workspace.currentVersion) {
+          if (!payload.success || !payload.data.workspace.currentVersion) {
+            setNotice({
+              type: "error",
+              message: payload.success
+                ? "诊断建议应用失败，请稍后重试。"
+                : payload.error.message,
+            });
+            return;
+          }
+
+          setWorkspace(payload.data.workspace);
+          setAppliedVersion(payload.data.workspace.currentVersion);
+          trackVersionCreated({
+            source: "diagnosis_apply",
+            resumeId,
+            versionId: payload.data.workspace.currentVersion.id,
+            versionType: payload.data.workspace.currentVersion.versionType,
+            appliedSuggestionCount: payload.data.appliedSuggestionIds.length,
+          });
+          setNotice({
+            type: "success",
+            message: `已应用 ${payload.data.appliedSuggestionIds.length} 条建议，并生成新的可回滚版本。`,
+          });
+        } catch {
           setNotice({
             type: "error",
-            message: payload.success
-              ? "诊断建议应用失败，请稍后重试。"
-              : payload.error.message,
+            message: "诊断建议应用失败，请检查网络后重试。",
           });
-          return;
         }
-
-        setWorkspace(payload.data.workspace);
-        setAppliedVersion(payload.data.workspace.currentVersion);
-        trackVersionCreated({
-          source: "diagnosis_apply",
-          resumeId,
-          versionId: payload.data.workspace.currentVersion.id,
-          versionType: payload.data.workspace.currentVersion.versionType,
-          appliedSuggestionCount: payload.data.appliedSuggestionIds.length,
-        });
-        setNotice({
-          type: "success",
-          message: `已应用 ${payload.data.appliedSuggestionIds.length} 条建议，并生成新的可回滚版本。`,
-        });
       })();
     });
   }
