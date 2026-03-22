@@ -17,6 +17,7 @@
 - Next.js 16 + TypeScript + Tailwind CSS 4
 - App Router 工作台与 API 路由
 - Prisma + PostgreSQL 数据模型与版本化资产
+- 已提交 Prisma Migrate 初始基线，可重复部署数据库结构
 - NextAuth Credentials 认证、注册、忘记密码、重置密码
 - `src/features` / `src/services` / `src/ai` 分层目录
 - 建档、母版生成、JD 优化、诊断、版本管理、导出等核心页面
@@ -42,10 +43,10 @@ Copy-Item .env.example .env.local
 npm run db:generate
 ```
 
-4. 初始化数据库
+4. 应用已提交的数据库迁移
 
 ```bash
-npm run db:migrate -- --name init
+npm run db:deploy
 ```
 
 5. 启动开发服务器
@@ -59,6 +60,15 @@ npm run dev
 ```bash
 npm run verify:integrations
 ```
+
+## 数据库工作流
+
+- 首次拉起现有项目：运行 `npm run db:deploy`
+- 修改 Prisma schema 并生成新迁移：运行 `npm run db:migrate -- --name <migration-name>`
+- 检查数据库与迁移状态：运行 `npm run db:status`
+
+生产环境不要再用 `db:push` 作为首发建库方式，统一使用已提交的 `prisma/migrations`
+和 `npm run db:deploy`。
 
 ## 目录结构
 
@@ -92,6 +102,7 @@ prisma
 - 实现规则：`AGENTS.md`
 - 用户定位与非目标：`RESEARCH.md`
 - 部署说明：`DEPLOYMENT.md`
+- 当前状态版上线清单：`DEPLOYMENT_CHECKLIST.md`
 
 ## 监控与收尾
 

@@ -1,6 +1,11 @@
 # 部署说明
 
 这份说明面向第一次部署网站的开发者，目标是让当前项目以最少折腾的方式上线。
+当前仓库已经完成 MVP 主链路，部署重点不再是“从零搭项目”，而是：
+
+- 使用已提交的 `prisma/migrations` 正式化数据库发布
+- 走一套适合 PDF 导出能力的 Railway / Render 部署流程
+- 先完成内测级可上线版本，再补对象存储和监控增强
 
 ## 推荐方案
 
@@ -40,6 +45,18 @@
 容器里已经默认设置了：
 
 - `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium`
+
+## 当前仓库状态
+
+这些事项已经在仓库内完成，不需要再按“空项目初始化”重做：
+
+- Next.js + TypeScript + Tailwind 基础设施
+- Prisma schema 与核心实体建模
+- NextAuth 认证、建档、母版生成、JD 优化、诊断、版本管理、Markdown / PDF 导出
+- GitHub 远端仓库
+- 初始 Prisma migration 基线
+
+如果你想看逐项状态版清单，直接看根目录的 `DEPLOYMENT_CHECKLIST.md`。
 
 ## 第 1 步：准备数据库
 
@@ -95,19 +112,22 @@ NEXT_PUBLIC_POSTHOG_KEY=
 NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
 ```
 
-## 第 4 步：初始化生产数据库
+## 第 4 步：应用正式数据库迁移
 
-第一次部署完成后，还需要把 Prisma 的表结构同步到线上数据库。
+当前仓库已经提交了 `prisma/migrations`，首次上线不要再使用 `db:push` 直接推表结构，
+而是统一使用正式迁移。
 
 你可以在本地执行：
 
 ```bash
-npm run db:push
+npm run db:deploy
 ```
 
-前提是你本地当前的 `DATABASE_URL` 指向的就是线上数据库。
+前提是你执行命令时的 `DATABASE_URL` 指向的就是目标 Neon 数据库。
 
 如果你不想改本地 `.env.local`，也可以临时新建一个 `.env.production.local` 或直接在终端里设置环境变量后再执行。
+
+如果你准备重建一套干净的 Neon 库用于首次内测，建议直接新建数据库，不继续沿用历史测试库。
 
 ## 第 5 步：上线后手工验收
 
@@ -120,6 +140,9 @@ npm run db:push
 5. 诊断
 6. 导出 Markdown
 7. 导出 PDF
+8. 粘贴 JD 并生成岗位定制版
+9. 保存新版本并再次导出 PDF
+10. 再注册第二个账号，确认无法看到第一个账号的数据
 
 如果你还没配置 `OPENAI_API_KEY`，生成/优化/诊断会走 fallback 规则模式，这是正常的。
 
@@ -151,9 +174,11 @@ npm run db:push
 
 ## 我建议你的上线顺序
 
-1. 先把首页和主流程再手工走一遍
-2. 推到 GitHub
-3. 先上 Railway
-4. 用 Neon 作为数据库
-5. 暂时不接 OpenAI、Sentry、PostHog
-6. 上线成功后再补对象存储和监控
+1. 新建一个干净的 Neon 数据库
+2. 确认 GitHub 上已经是最新代码
+3. 在 Railway 连接仓库并部署 `Dockerfile`
+4. 配置最小必需环境变量
+5. 对新库执行 `npm run db:deploy`
+6. 按主链路做线上手工验收
+7. 暂时不接 OpenAI、Sentry、PostHog 也可以先上线内测
+8. 上线成功后再补对象存储和监控
