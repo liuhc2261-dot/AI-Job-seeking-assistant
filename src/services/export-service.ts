@@ -321,7 +321,9 @@ class ExportService {
         exportId: pendingExport.id,
         resumeId: input.resumeId,
         resumeVersionId: input.resumeVersionId,
+        errorName: error instanceof Error ? error.name : "UnknownError",
         message: error instanceof Error ? error.message : "unknown_error",
+        stack: error instanceof Error ? error.stack : undefined,
       });
 
       if (error instanceof Error && error.message === "PDF_BROWSER_UNAVAILABLE") {

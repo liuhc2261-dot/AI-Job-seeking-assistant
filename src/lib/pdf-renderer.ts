@@ -43,6 +43,9 @@ export async function renderResumePdfBuffer({
     executablePath,
     headless: true,
     args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
       "--disable-gpu",
       "--no-default-browser-check",
       "--no-first-run",
