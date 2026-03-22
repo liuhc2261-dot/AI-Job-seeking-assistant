@@ -30,5 +30,6 @@ export function resetTestState() {
   delete globalThis.__testResumeGeneratorAgent;
   delete globalThis.__testLibApiResume;
   delete globalThis.__testExportService;
+  delete globalThis.__testExportStorage;
   delete globalThis.__testResumeService;
 }

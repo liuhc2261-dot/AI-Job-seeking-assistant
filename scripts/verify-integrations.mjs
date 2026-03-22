@@ -55,6 +55,17 @@ async function verifyPdfBrowser() {
 }
 
 function verifyLocalReadiness() {
+  const exportStorageDriver = readEnv("EXPORT_STORAGE_DRIVER", "local")
+    .trim()
+    .toLowerCase();
+  const exportStorageConfigured =
+    exportStorageDriver === "local" ||
+    (readEnv("EXPORT_STORAGE_BUCKET") &&
+      (readEnv("EXPORT_STORAGE_REGION") || exportStorageDriver === "r2") &&
+      readEnv("EXPORT_STORAGE_ACCESS_KEY_ID") &&
+      readEnv("EXPORT_STORAGE_SECRET_ACCESS_KEY") &&
+      (exportStorageDriver !== "r2" || readEnv("EXPORT_STORAGE_ENDPOINT")));
+
   return [
     {
       name: "databaseUrl",
@@ -76,6 +87,14 @@ function verifyLocalReadiness() {
       detail: readEnv("NEXT_PUBLIC_APP_URL")
         ? "NEXT_PUBLIC_APP_URL configured"
         : "NEXT_PUBLIC_APP_URL is empty",
+    },
+    {
+      name: "exportStorage",
+      status: exportStorageConfigured ? "ok" : "missing",
+      detail:
+        exportStorageDriver === "local"
+          ? "using local PDF export storage"
+          : "S3-compatible PDF export storage is incomplete",
     },
   ];
 }

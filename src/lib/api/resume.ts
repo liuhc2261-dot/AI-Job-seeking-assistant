@@ -131,6 +131,15 @@ export function getResumeApiErrorResponse(error: unknown) {
           },
         });
         return apiError("当前环境缺少可用的浏览器内核，暂时无法生成 PDF。", 500);
+      case "EXPORT_STORAGE_UNAVAILABLE":
+        captureServerException(error, {
+          area: "resume-api",
+          tags: {
+            errorType: "ExportServiceError",
+            code: error.code,
+          },
+        });
+        return apiError("PDF 导出存储配置不完整，请检查 R2 / S3 环境变量后重试。", 500);
       case "EXPORT_FILE_MISSING":
         captureServerException(error, {
           area: "resume-api",

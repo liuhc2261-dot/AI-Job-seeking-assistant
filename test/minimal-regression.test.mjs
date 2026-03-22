@@ -13,6 +13,7 @@ const resumeDocumentMockUrl = toTestFileUrl("mocks/lib-resume-document.mjs");
 const profileServiceMockUrl = toTestFileUrl("mocks/services-profile-service.mjs");
 const resumeGeneratorAgentMockUrl = toTestFileUrl("mocks/ai-resume-generator-agent.mjs");
 const resumeApiMockUrl = toTestFileUrl("mocks/lib-api-resume.mjs");
+const exportStorageMockUrl = toTestFileUrl("mocks/lib-export-storage.mjs");
 const exportServiceMockUrl = toTestFileUrl("mocks/services-export-service.mjs");
 const resumeServiceMockUrl = toTestFileUrl("mocks/services-resume-service.mjs");
 
@@ -1033,6 +1034,149 @@ describe("export-service minimal regression", () => {
     assert.equal(state.auditLogs[0].actionType, "EXPORT_DOWNLOADED");
     assert.equal(state.auditLogs[0].payload.requestId, "req-download-1");
     assert.equal(state.auditLogs[0].payload.exportId, "export-1");
+  });
+
+  it("loads successful pdf exports from the configured export storage backend", async () => {
+    const state = {
+      clockTick: 0,
+      resumes: [
+        {
+          id: "resume-1",
+          userId: "user-1",
+        },
+      ],
+      resumeVersions: [
+        {
+          id: "version-1",
+          resumeId: "resume-1",
+          userId: "user-1",
+          versionName: "master v1",
+          versionType: "MASTER",
+          jobTargetTitle: "Frontend Intern",
+          jobTargetCompany: null,
+          contentMarkdown: "# Resume",
+          contentJson: createResumeContent(),
+        },
+      ],
+      exports: [
+        {
+          id: "export-1",
+          userId: "user-1",
+          resumeVersionId: "version-1",
+          exportType: "PDF",
+          templateName: "ats-standard",
+          fileUrl: "/api/exports/export-1",
+          fileSize: 12,
+          status: "SUCCESS",
+          createdAt: new Date("2026-03-20T08:31:00Z"),
+        },
+      ],
+      auditLogs: [],
+    };
+
+    globalThis.__testPrisma = createExportPrismaMock(state);
+    globalThis.__testExportStorage = {
+      async read(input) {
+        assert.deepEqual(input, {
+          exportId: "export-1",
+          exportType: "PDF",
+        });
+
+        return Buffer.from("pdf-content");
+      },
+    };
+    setModuleMocks([
+      ["@/lib/db", dbMockUrl],
+      ["@/lib/export-storage", exportStorageMockUrl],
+    ]);
+
+    const { exportService } = await importFreshModule("src/services/export-service.ts");
+    const download = await exportService.getExportDownload({
+      userId: "user-1",
+      exportId: "export-1",
+      requestId: "req-download-pdf",
+    });
+
+    assert.equal(download.exportType, "pdf");
+    assert.equal(download.contentType, "application/pdf");
+    assert.ok(Buffer.isBuffer(download.content));
+    assert.equal(download.fileSize, 12);
+    assert.equal(state.auditLogs.length, 1);
+    assert.equal(state.auditLogs[0].actionType, "EXPORT_DOWNLOADED");
+    assert.equal(state.auditLogs[0].payload.requestId, "req-download-pdf");
+  });
+
+  it("maps missing pdf objects in export storage to EXPORT_FILE_MISSING", async () => {
+    const state = {
+      resumes: [
+        {
+          id: "resume-1",
+          userId: "user-1",
+        },
+      ],
+      resumeVersions: [
+        {
+          id: "version-1",
+          resumeId: "resume-1",
+          userId: "user-1",
+          versionName: "master v1",
+          versionType: "MASTER",
+          jobTargetTitle: null,
+          jobTargetCompany: null,
+          contentMarkdown: "# Resume",
+          contentJson: createResumeContent(),
+        },
+      ],
+      exports: [
+        {
+          id: "export-1",
+          userId: "user-1",
+          resumeVersionId: "version-1",
+          exportType: "PDF",
+          templateName: "ats-standard",
+          fileUrl: "/api/exports/export-1",
+          fileSize: 12,
+          status: "SUCCESS",
+          createdAt: new Date("2026-03-20T08:32:00Z"),
+        },
+      ],
+      auditLogs: [],
+    };
+
+    globalThis.__testPrisma = createExportPrismaMock(state);
+    globalThis.__testExportStorage = {
+      async read() {
+        throw new globalThis.__testExportStorage.ExportStorageError(
+          "EXPORT_OBJECT_MISSING",
+          "missing",
+        );
+      },
+      ExportStorageError: null,
+    };
+    setModuleMocks([
+      ["@/lib/db", dbMockUrl],
+      ["@/lib/export-storage", exportStorageMockUrl],
+    ]);
+
+    const { ExportStorageError } = await import(exportStorageMockUrl);
+    globalThis.__testExportStorage.ExportStorageError = ExportStorageError;
+
+    const { ExportServiceError, exportService } = await importFreshModule(
+      "src/services/export-service.ts",
+    );
+
+    await assert.rejects(
+      () =>
+        exportService.getExportDownload({
+          userId: "user-1",
+          exportId: "export-1",
+        }),
+      (error) => {
+        assert.ok(error instanceof ExportServiceError);
+        assert.equal(error.code, "EXPORT_FILE_MISSING");
+        return true;
+      },
+    );
   });
 });
 

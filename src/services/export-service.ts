@@ -1,8 +1,6 @@
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import path from "node:path";
-
 import { resumeContentJsonSchema } from "@/ai/schemas/resume-generator";
 import { prisma } from "@/lib/db";
+import { ExportStorageError, exportFileStorage } from "@/lib/export-storage";
 import { captureServerException } from "@/lib/monitoring/sentry";
 import type {
   ExportFormatOption,
@@ -34,7 +32,6 @@ const versionTypeMap = {
 
 const markdownTemplateName = "source-markdown";
 const pdfTemplateName = "ats-standard";
-const exportStorageDir = path.join(process.cwd(), ".tmp", "exports");
 
 const exportTemplates: ExportTemplate[] = [
   {
@@ -104,6 +101,7 @@ export class ExportServiceError extends Error {
       | "EXPORT_RETRY_NOT_ALLOWED"
       | "EXPORT_UNSUPPORTED"
       | "EXPORT_BROWSER_UNAVAILABLE"
+      | "EXPORT_STORAGE_UNAVAILABLE"
       | "EXPORT_FILE_MISSING",
   ) {
     super(code);
@@ -150,16 +148,6 @@ function buildAsciiFileName(exportId: string, extension: string) {
 
 function getTextByteLength(content: string) {
   return new TextEncoder().encode(content).byteLength;
-}
-
-function getStoredExportPath(exportId: string, exportType: keyof typeof exportTypeMap) {
-  return path.join(exportStorageDir, `export-${exportId}.${getFileExtension(exportType)}`);
-}
-
-async function ensureExportStorageDirectory() {
-  await mkdir(exportStorageDir, {
-    recursive: true,
-  });
 }
 
 class ExportService {
@@ -273,7 +261,6 @@ class ExportService {
       exportType: "PDF",
       templateName: input.templateName || pdfTemplateName,
     });
-    const storedFilePath = getStoredExportPath(pendingExport.id, "PDF");
 
     try {
       const contentJson = resumeContentJsonSchema.parse(sourceVersion.contentJson);
@@ -283,8 +270,12 @@ class ExportService {
         templateName: pendingExport.templateName,
       });
 
-      await ensureExportStorageDirectory();
-      await writeFile(storedFilePath, pdfBuffer);
+      await exportFileStorage.write({
+        exportId: pendingExport.id,
+        exportType: "PDF",
+        content: pdfBuffer,
+        contentType: "application/pdf",
+      });
 
       const updatedExport = await this.completeExport({
         exportId: pendingExport.id,
@@ -302,7 +293,7 @@ class ExportService {
 
       return this.mapExportRecord(updatedExport);
     } catch (error) {
-      await this.failExport(pendingExport.id, storedFilePath);
+      await this.failExport(pendingExport.id, "PDF");
 
       captureServerException(error, {
         area: "export-service",
@@ -328,6 +319,13 @@ class ExportService {
 
       if (error instanceof Error && error.message === "PDF_BROWSER_UNAVAILABLE") {
         throw new ExportServiceError("EXPORT_BROWSER_UNAVAILABLE");
+      }
+
+      if (
+        error instanceof ExportStorageError &&
+        error.code === "EXPORT_STORAGE_MISCONFIGURED"
+      ) {
+        throw new ExportServiceError("EXPORT_STORAGE_UNAVAILABLE");
       }
 
       throw error;
@@ -404,7 +402,10 @@ class ExportService {
 
     if (exportRecord.exportType === "PDF") {
       try {
-        const fileBuffer = await readFile(getStoredExportPath(exportRecord.id, "PDF"));
+        const fileBuffer = await exportFileStorage.read({
+          exportId: exportRecord.id,
+          exportType: "PDF",
+        });
 
         const payload = {
           exportId: exportRecord.id,
@@ -431,8 +432,22 @@ class ExportService {
         });
 
         return payload;
-      } catch {
-        throw new ExportServiceError("EXPORT_FILE_MISSING");
+      } catch (error) {
+        if (
+          error instanceof ExportStorageError &&
+          error.code === "EXPORT_STORAGE_MISCONFIGURED"
+        ) {
+          throw new ExportServiceError("EXPORT_STORAGE_UNAVAILABLE");
+        }
+
+        if (
+          error instanceof ExportStorageError &&
+          error.code === "EXPORT_OBJECT_MISSING"
+        ) {
+          throw new ExportServiceError("EXPORT_FILE_MISSING");
+        }
+
+        throw error;
       }
     }
 
@@ -673,7 +688,10 @@ class ExportService {
     });
   }
 
-  private async failExport(exportId: string, storedFilePath?: string) {
+  private async failExport(
+    exportId: string,
+    exportType?: Extract<keyof typeof exportTypeMap, "PDF">,
+  ) {
     await prisma.export
       .update({
         where: {
@@ -687,10 +705,13 @@ class ExportService {
       })
       .catch(() => undefined);
 
-    if (storedFilePath) {
-      await rm(storedFilePath, {
-        force: true,
-      }).catch(() => undefined);
+    if (exportType) {
+      await exportFileStorage
+        .remove({
+          exportId,
+          exportType,
+        })
+        .catch(() => undefined);
     }
   }
 

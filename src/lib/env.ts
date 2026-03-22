@@ -22,9 +22,25 @@ export const env = {
   posthogHost:
     process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
   puppeteerExecutablePath: process.env.PUPPETEER_EXECUTABLE_PATH ?? "",
+  exportStorageDriver: process.env.EXPORT_STORAGE_DRIVER ?? "local",
+  exportStorageBucket: process.env.EXPORT_STORAGE_BUCKET ?? "",
+  exportStorageRegion: process.env.EXPORT_STORAGE_REGION ?? "",
+  exportStorageEndpoint: process.env.EXPORT_STORAGE_ENDPOINT ?? "",
+  exportStorageAccessKeyId: process.env.EXPORT_STORAGE_ACCESS_KEY_ID ?? "",
+  exportStorageSecretAccessKey:
+    process.env.EXPORT_STORAGE_SECRET_ACCESS_KEY ?? "",
 };
 
 export function getSystemReadiness(): ReadinessItem[] {
+  const exportStorageDriver = env.exportStorageDriver.trim().toLowerCase();
+  const exportStorageConfigured =
+    exportStorageDriver === "local" ||
+    (Boolean(env.exportStorageBucket) &&
+      Boolean(env.exportStorageRegion || exportStorageDriver === "r2") &&
+      Boolean(env.exportStorageAccessKeyId) &&
+      Boolean(env.exportStorageSecretAccessKey) &&
+      (exportStorageDriver !== "r2" || Boolean(env.exportStorageEndpoint)));
+
   return [
     {
       key: "database",
@@ -74,6 +90,13 @@ export function getSystemReadiness(): ReadinessItem[] {
       configured: Boolean(env.puppeteerExecutablePath),
       description:
         "Required on most servers so Puppeteer can launch Chrome or Edge for PDF export.",
+    },
+    {
+      key: "pdfStorage",
+      label: "PDF object storage",
+      configured: exportStorageConfigured,
+      description:
+        "Use local disk in development, or configure S3/R2 in production so PDF files survive container restarts.",
     },
   ];
 }
