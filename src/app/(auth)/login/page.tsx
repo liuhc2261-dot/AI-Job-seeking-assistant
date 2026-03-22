@@ -19,18 +19,18 @@ export default async function LoginPage() {
         <SectionCard
           eyebrow="登录"
           title="先拿到会话，再进入求职主链路"
-          description="当前初始化阶段已经接好 Credentials 认证基础能力：注册、登录、会话保持与受保护工作台入口。"
+          description="登录后即可进入工作台，继续完成建档、母版生成、JD 优化、诊断和导出。"
         >
           <ul className="space-y-3 text-sm leading-6 text-[color:var(--muted)]">
-            <li>登录后默认进入 `/dashboard`，后续建档与简历路由将在工作台内逐步接入。</li>
-            <li>服务端会话通过 httpOnly Cookie 维护，符合 TechDesign 的基础鉴权方向。</li>
-            <li>用户数据后续会统一走 `user_id` 隔离查询，不允许跨用户读取私有简历资产。</li>
+            <li>登录后默认进入 `/dashboard`，当前工作台已经接通建档、简历中心和设置入口。</li>
+            <li>服务端会话通过 httpOnly Cookie 维护，符合当前项目的基础鉴权方案。</li>
+            <li>用户数据查询始终带 `user_id` 约束，不允许跨用户读取私有简历资产。</li>
           </ul>
         </SectionCard>
 
         <SectionCard
           title="登录账号"
-          description="使用邮箱和密码进入当前初始化好的工作台。"
+          description="使用邮箱和密码进入当前已可运行的工作台。"
         >
           <LoginForm />
         </SectionCard>

@@ -7,19 +7,31 @@ import { SiteHeader } from "@/components/site-header";
 const productPillars = [
   {
     title: "建档资产化",
-    description: "先沉淀母版资料，再驱动简历生成、优化和版本管理。",
+    description:
+      "基础信息、教育、项目、实习、奖项和技能都会真实落库，并沉淀为后续 ResumeGeneratorAgent 使用的 profile snapshot。",
+    highlight:
+      "当前已接通真实表单、服务层和数据库链路，可以直接继续完善个人资料。",
   },
   {
     title: "岗位导向优化",
-    description: "围绕 JD 关键词、职责和匹配差距做定制，而不是泛化改写。",
+    description:
+      "围绕 JD 关键词、职责和匹配差距生成岗位版简历，而不是泛化改写。",
+    highlight:
+      "已支持 JD 解析、岗位定制、差异展示和版本来源追踪。",
   },
   {
     title: "可解释与可回滚",
-    description: "所有优化默认产生新版本，保留来源、改动说明和后续 diff 能力。",
+    description:
+      "编辑、优化和诊断应用都会默认生成新版本，保留来源、改动说明和后续 diff 能力。",
+    highlight:
+      "当前版本链已经支持复制、重命名、回滚、删除和时间线查看。",
   },
   {
     title: "稳定导出交付",
-    description: "以 Markdown + JSON 双存为基础，为 HTML 转 PDF 铺好路。",
+    description:
+      "以 Markdown + JSON 双存为基础，支持服务端 HTML 渲染后导出 PDF。",
+    highlight:
+      "Markdown 与 PDF 导出都已打通，并会写入 exports 和 audit_logs。",
   },
 ];
 
@@ -42,9 +54,9 @@ export default async function HomePage() {
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 lg:px-8">
         <section className="grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
           <SectionCard
-            eyebrow="MVP 初始化"
+            eyebrow="已打通主流程"
             title="岗位导向型 AI 求职简历助手"
-            description="严格按照 PRD、TechDesign 和 AGENTS 约束初始化的单仓全栈项目骨架。当前重点放在里程碑 1：脚手架、认证基础、Prisma 数据模型和基础路由。"
+            description="当前版本已经完成建档、母版简历生成、JD 定制优化、简历诊断、版本管理和 Markdown/PDF 导出主链路，并接入认证、审计日志与基础监控。"
             className="overflow-hidden"
           >
             <div className="space-y-6">
@@ -70,7 +82,7 @@ export default async function HomePage() {
                   href="/login"
                   className="rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-semibold text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
                 >
-                  查看认证入口
+                  查看登录入口
                 </Link>
               </div>
             </div>
@@ -79,13 +91,13 @@ export default async function HomePage() {
           <SectionCard
             eyebrow="Tech Stack"
             title="Next.js + Prisma + NextAuth"
-            description="技术选型完全对齐 TechDesign 的默认推荐路线，并预留 AI 编排、版本化数据与服务层边界。"
+            description="技术选型对齐 TechDesign 的默认路线，并已经接好 AI 编排、版本化数据模型、导出服务和监控钩子。"
           >
             <ul className="space-y-3 text-sm leading-6 text-[color:var(--muted)]">
               <li>前端：Next.js 16 / React 19 / TypeScript / Tailwind CSS 4</li>
               <li>后端：App Router Route Handlers + Server Actions</li>
-              <li>数据层：PostgreSQL + Prisma，核心实体一次性建模</li>
-              <li>认证：NextAuth Credentials 模式，后续可继续扩展邮箱找回等流程</li>
+              <li>数据层：PostgreSQL + Prisma，核心实体已完整建模</li>
+              <li>认证：NextAuth Credentials 模式，已支持注册、登录和密码重置</li>
             </ul>
           </SectionCard>
         </section>
@@ -99,7 +111,7 @@ export default async function HomePage() {
               className="h-full"
             >
               <div className="rounded-2xl bg-[color:var(--accent-soft)] px-4 py-3 text-sm leading-6 text-[color:var(--accent-strong)]">
-                这部分在初始化阶段已经预留目录、字段或路由骨架，后续里程碑可以直接继续实现。
+                {pillar.highlight}
               </div>
             </SectionCard>
           ))}

@@ -10,22 +10,22 @@ const roadmapCards = [
   {
     title: "资料建档",
     description:
-      "里程碑 2 已接入基础信息、教育、项目、实习、奖项和技能的真实 CRUD。",
+      "基础信息、教育、项目、实习、奖项和技能都已接入真实 CRUD，可直接沉淀 profile snapshot。",
     href: "/profile",
   },
   {
     title: "母版简历",
-    description: "里程碑 3 接入 ResumeGeneratorAgent、版本存储与编辑预览。",
+    description: "ResumeGeneratorAgent、版本存储、编辑页和预览页已经打通，可直接生成第一版母版。",
     href: "/resumes",
   },
   {
     title: "JD 定制",
-    description: "里程碑 4 接入 JD 解析、岗位优化与差异展示。",
+    description: "已支持 JD 解析、岗位优化和差异展示，优化结果会沉淀为新的可回滚版本。",
     href: "/resumes",
   },
   {
-    title: "导出交付",
-    description: "里程碑 6 接入 HTML 模板转 PDF 与导出历史记录。",
+    title: "导出与版本管理",
+    description: "Markdown / PDF 导出、导出历史、版本时间线、复制和回滚能力都已可用。",
     href: "/resumes",
   },
 ];
@@ -42,13 +42,13 @@ export default async function DashboardPage() {
       <PageIntro
         eyebrow="Dashboard"
         title={`${displayName}，工作台已经准备好了`}
-        description="这里汇总当前初始化阶段已经完成的基础设施，并把后续里程碑自然挂到对应入口中。"
+        description="当前主链路已经打通：建档、母版生成、JD 定制、诊断、版本管理和导出都可以从这里进入。"
       />
 
       <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <SectionCard
-          title="初始化覆盖范围"
-          description="对齐里程碑 1：Next.js + TS + Tailwind、Prisma + PostgreSQL、认证基础能力、基础路由。"
+          title="当前能力覆盖"
+          description="当前版本已覆盖里程碑 1 到 7：基础设施、建档、母版简历、JD 优化、诊断、导出/版本管理与监控收尾。"
         >
           <ol className="space-y-4">
             {lifecycle.map((item, index) => (
@@ -69,7 +69,7 @@ export default async function DashboardPage() {
 
         <SectionCard
           title="环境就绪度"
-          description="为了方便本地启动，工作台会直接提示哪些关键变量已经配置。"
+          description="这里会直接提示本地或部署环境里哪些关键变量已经配置完成。"
         >
           <div className="space-y-3">
             {readiness.map((item) => (

@@ -91,6 +91,7 @@ prisma
 - 技术方案：`TechDesign.md`
 - 实现规则：`AGENTS.md`
 - 用户定位与非目标：`RESEARCH.md`
+- 部署说明：`DEPLOYMENT.md`
 
 ## 监控与收尾
 
