@@ -19,6 +19,7 @@ const exportServiceMockUrl = toTestFileUrl("mocks/services-export-service.mjs");
 const commercialAccessServiceMockUrl = toTestFileUrl(
   "mocks/services-commercial-access-service.mjs",
 );
+const paymentServiceMockUrl = toTestFileUrl("mocks/services-payment-service.mjs");
 const resumeServiceMockUrl = toTestFileUrl("mocks/services-resume-service.mjs");
 
 function createResumeContent(overrides = {}) {
@@ -850,11 +851,24 @@ function createCommercialPrismaMock(state) {
         state.commerceOrders.push({
           id: `commerce-order-${state.commerceOrders.length + 1}`,
           ...cloneValue(data),
+          paymentPayload: data.paymentPayload ?? null,
+          paymentExpiresAt: data.paymentExpiresAt ?? null,
           createdAt: nextDate(state),
           updatedAt: nextDate(state),
         });
 
         return cloneValue(state.commerceOrders.at(-1));
+      },
+      async update({ where, data }) {
+        const order = getCommerceOrder(where);
+
+        if (!order) {
+          throw new Error(`TEST_COMMERCE_ORDER_NOT_FOUND:${where.id}`);
+        }
+
+        applyOrderMutation(order, data);
+
+        return cloneValue(order);
       },
       async updateMany({ where, data }) {
         const order = getCommerceOrder(where);
@@ -3555,6 +3569,16 @@ describe("route smoke tests", () => {
             externalOrderId: null,
             paidAt: null,
             createdAt: "2026-03-20T10:00:00.000Z",
+            paymentSession: {
+              channel: "wechat",
+              status: "ready",
+              expiresAt: "2026-03-20T10:30:00.000Z",
+              codeUrl: "weixin://wxpay/mock",
+              paymentUrl: "weixin://wxpay/mock",
+              qrCodeDataUrl: "data:image/png;base64,mock",
+              displayTitle: "微信支付二维码",
+              displayDescription: "mock",
+            },
           },
           profile: {
             accessTier: "trial",
@@ -3640,6 +3664,7 @@ describe("route smoke tests", () => {
             externalOrderId: "wx_001",
             paidAt: "2026-03-20T10:05:00.000Z",
             createdAt: "2026-03-20T10:00:00.000Z",
+            paymentSession: null,
           },
           profile: {
             accessTier: "paid",
@@ -3699,5 +3724,110 @@ describe("route smoke tests", () => {
     });
     assert.equal(payload.data.profile.accessTier, "paid");
     assert.equal(payload.data.order.status, "manual_granted");
+  });
+
+  it("POST /api/payments/wechat/notify confirms paid order after callback verification", async () => {
+    createCommercialApiMocks();
+
+    let confirmInput = null;
+    globalThis.__testPaymentService = {
+      async handleWechatCallback() {
+        return {
+          handled: true,
+          orderId: "commerce-order-1",
+          paymentChannel: "wechat",
+          externalOrderId: "wx_txn_001",
+        };
+      },
+    };
+    globalThis.__testCommercialAccessService = {
+      async confirmOrderPaid(input) {
+        confirmInput = input;
+
+        return {
+          order: {
+            id: "commerce-order-1",
+          },
+        };
+      },
+    };
+
+    setModuleMocks([
+      ["@/lib/api/commercial", commercialApiMockUrl],
+      ["@/services/payment-service", paymentServiceMockUrl],
+      ["@/services/commercial-access-service", commercialAccessServiceMockUrl],
+    ]);
+
+    const routeModule = await importFreshModule(
+      "src/app/api/payments/wechat/notify/route.ts",
+    );
+    const response = await routeModule.POST(
+      new Request("http://localhost/api/payments/wechat/notify", {
+        method: "POST",
+        body: JSON.stringify({ id: "evt_1" }),
+      }),
+    );
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(confirmInput, {
+      orderId: "commerce-order-1",
+      paymentChannel: "wechat",
+      externalOrderId: "wx_txn_001",
+      notes: "wechat_notify_paid",
+      paidStatus: "PAID",
+    });
+    assert.equal(payload.code, "SUCCESS");
+  });
+
+  it("POST /api/payments/alipay/notify confirms paid order after callback verification", async () => {
+    let confirmInput = null;
+    globalThis.__testPaymentService = {
+      async handleAlipayCallback() {
+        return {
+          handled: true,
+          orderId: "commerce-order-2",
+          paymentChannel: "alipay",
+          externalOrderId: "ali_txn_001",
+        };
+      },
+    };
+    globalThis.__testCommercialAccessService = {
+      async confirmOrderPaid(input) {
+        confirmInput = input;
+
+        return {
+          order: {
+            id: "commerce-order-2",
+          },
+        };
+      },
+    };
+
+    setModuleMocks([
+      ["@/services/payment-service", paymentServiceMockUrl],
+      ["@/services/commercial-access-service", commercialAccessServiceMockUrl],
+    ]);
+
+    const routeModule = await importFreshModule(
+      "src/app/api/payments/alipay/notify/route.ts",
+    );
+    const response = await routeModule.POST(
+      new Request("http://localhost/api/payments/alipay/notify", {
+        method: "POST",
+        body: "trade_status=TRADE_SUCCESS",
+      }),
+    );
+    const payload = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(confirmInput, {
+      orderId: "commerce-order-2",
+      paymentChannel: "alipay",
+      externalOrderId: "ali_txn_001",
+      notes: "alipay_notify_paid",
+      paidStatus: "PAID",
+    });
+    assert.equal(payload, "success");
   });
 });

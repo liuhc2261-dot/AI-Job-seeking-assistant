@@ -10,6 +10,16 @@ function readEnv(name, fallback = "") {
   return process.env[name] ?? fallback;
 }
 
+function hasConfiguredValue(name) {
+  const value = readEnv(name).trim();
+
+  if (!value) {
+    return false;
+  }
+
+  return !/^<replace-with-.*>$/.test(value) && !/^<.*>$/.test(value);
+}
+
 function trimTrailingSlash(value) {
   return value.replace(/\/+$/, "");
 }
@@ -90,10 +100,48 @@ function verifyLocalReadiness() {
     },
     {
       name: "commerceCallbackSecret",
-      status: readEnv("COMMERCE_CALLBACK_SECRET") ? "ok" : "missing",
-      detail: readEnv("COMMERCE_CALLBACK_SECRET")
+      status: hasConfiguredValue("COMMERCE_CALLBACK_SECRET") ? "ok" : "missing",
+      detail: hasConfiguredValue("COMMERCE_CALLBACK_SECRET")
         ? "COMMERCE_CALLBACK_SECRET configured"
         : "COMMERCE_CALLBACK_SECRET is empty",
+    },
+    {
+      name: "wechatPay",
+      status:
+        hasConfiguredValue("WECHAT_PAY_APP_ID") &&
+        hasConfiguredValue("WECHAT_PAY_MCH_ID") &&
+        hasConfiguredValue("WECHAT_PAY_SERIAL_NO") &&
+        hasConfiguredValue("WECHAT_PAY_PRIVATE_KEY") &&
+        hasConfiguredValue("WECHAT_PAY_API_V3_KEY") &&
+        hasConfiguredValue("WECHAT_PAY_PLATFORM_PUBLIC_KEY")
+          ? "ok"
+          : "missing",
+      detail:
+        hasConfiguredValue("WECHAT_PAY_APP_ID") &&
+        hasConfiguredValue("WECHAT_PAY_MCH_ID") &&
+        hasConfiguredValue("WECHAT_PAY_SERIAL_NO") &&
+        hasConfiguredValue("WECHAT_PAY_PRIVATE_KEY") &&
+        hasConfiguredValue("WECHAT_PAY_API_V3_KEY") &&
+        hasConfiguredValue("WECHAT_PAY_PLATFORM_PUBLIC_KEY")
+          ? "WeChat Pay Native callback and signing config present"
+          : "WeChat Pay env vars are incomplete",
+    },
+    {
+      name: "alipay",
+      status:
+        hasConfiguredValue("ALIPAY_APP_ID") &&
+        hasConfiguredValue("ALIPAY_PRIVATE_KEY") &&
+        hasConfiguredValue("ALIPAY_PUBLIC_KEY") &&
+        hasConfiguredValue("ALIPAY_GATEWAY_URL")
+          ? "ok"
+          : "missing",
+      detail:
+        hasConfiguredValue("ALIPAY_APP_ID") &&
+        hasConfiguredValue("ALIPAY_PRIVATE_KEY") &&
+        hasConfiguredValue("ALIPAY_PUBLIC_KEY") &&
+        hasConfiguredValue("ALIPAY_GATEWAY_URL")
+          ? "Alipay precreate and notify verification config present"
+          : "Alipay env vars are incomplete",
     },
     {
       name: "exportStorage",

@@ -11,6 +11,24 @@ export type CommerceOrderStatusKind =
 
 export type CommercePaymentChannelKind = "manual" | "wechat" | "alipay";
 
+export type CommercePaymentSessionStatusKind =
+  | "not_configured"
+  | "pending"
+  | "ready"
+  | "expired"
+  | "paid";
+
+export type CommercePaymentSession = {
+  channel: CommercePaymentChannelKind;
+  status: CommercePaymentSessionStatusKind;
+  expiresAt: string | null;
+  codeUrl: string | null;
+  paymentUrl: string | null;
+  qrCodeDataUrl: string | null;
+  displayTitle: string;
+  displayDescription: string;
+};
+
 export type CommerceUsageFeatureKind =
   | "master_resume_generate"
   | "jd_tailor"
@@ -57,6 +75,7 @@ export type CommerceOrderSummary = {
   externalOrderId: string | null;
   paidAt: string | null;
   createdAt: string;
+  paymentSession: CommercePaymentSession | null;
 };
 
 export type CommerceOverview = {

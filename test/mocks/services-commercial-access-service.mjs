@@ -1,3 +1,5 @@
+export class CommercialAccessServiceError extends Error {}
+
 export const commercialAccessService = new Proxy(
   {},
   {

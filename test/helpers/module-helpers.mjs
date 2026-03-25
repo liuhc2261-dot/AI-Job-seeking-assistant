@@ -34,4 +34,5 @@ export function resetTestState() {
   delete globalThis.__testResumeService;
   delete globalThis.__testCommercialAccessService;
   delete globalThis.__testLibApiCommercial;
+  delete globalThis.__testPaymentService;
 }

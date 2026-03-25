@@ -7,12 +7,14 @@ import {
 } from "@/lib/commercial";
 import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
+import { paymentService } from "@/services/payment-service";
 import type {
   CommerceOverview,
   CommercePlanCodeKind,
   CommercePlanSummary,
   CommercialProfileSummary,
   CommerceOrderSummary,
+  CommercePaymentSession,
   CommerceUsageFeatureKind,
 } from "@/types/commercial";
 
@@ -162,9 +164,11 @@ function mapOrderSummary(order: {
   status: "PENDING" | "PAID" | "CANCELLED" | "REFUNDED" | "MANUAL_GRANTED";
   paymentChannel: string | null;
   externalOrderId: string | null;
+  paymentPayload: Prisma.JsonValue | null;
+  paymentExpiresAt: Date | null;
   paidAt: Date | null;
   createdAt: Date;
-}): CommerceOrderSummary {
+}, paymentSession: CommercePaymentSession | null): CommerceOrderSummary {
   return {
     id: order.id,
     planCode: planCodeMap[order.planCode],
@@ -175,6 +179,7 @@ function mapOrderSummary(order: {
     externalOrderId: order.externalOrderId,
     paidAt: order.paidAt?.toISOString() ?? null,
     createdAt: order.createdAt.toISOString(),
+    paymentSession,
   };
 }
 
@@ -232,7 +237,11 @@ class CommercialAccessService {
       },
     });
 
-    return orders.map((order) => mapOrderSummary(order));
+    return Promise.all(
+      orders.map(async (order) =>
+        mapOrderSummary(order, await paymentService.buildOrderPaymentSession(order)),
+      ),
+    );
   }
 
   async createCheckoutOrder({
@@ -247,7 +256,7 @@ class CommercialAccessService {
       throw new CommercialAccessServiceError("PLAN_NOT_FOUND");
     }
 
-    return prisma.$transaction(async (tx) => {
+    const checkoutBase = await prisma.$transaction(async (tx) => {
       const existingUser = await tx.user.findUnique({
         where: {
           id: userId,
@@ -275,7 +284,7 @@ class CommercialAccessService {
 
       if (existingPendingOrder) {
         return {
-          order: mapOrderSummary(existingPendingOrder),
+          order: existingPendingOrder,
           profile: this.mapProfileSummary(profile),
           plan: mapPlanSummary(resolvedPlanCode),
           reusedExistingOrder: true,
@@ -311,12 +320,19 @@ class CommercialAccessService {
       });
 
       return {
-        order: mapOrderSummary(order),
+        order,
         profile: this.mapProfileSummary(profile),
         plan: mapPlanSummary(resolvedPlanCode),
         reusedExistingOrder: false,
       };
     });
+
+    const paymentSession = await paymentService.ensureOrderPaymentSession(checkoutBase.order);
+
+    return {
+      ...checkoutBase,
+      order: mapOrderSummary(checkoutBase.order, paymentSession),
+    };
   }
 
   async confirmOrderPaid({
@@ -597,7 +613,7 @@ class CommercialAccessService {
     });
 
     return {
-      order: mapOrderSummary(order),
+      order: mapOrderSummary(order, await paymentService.buildOrderPaymentSession(order)),
       profile: this.mapProfileSummary(updatedProfile),
     };
   }
@@ -630,7 +646,7 @@ class CommercialAccessService {
 
     if (order.status === "PAID" || order.status === "MANUAL_GRANTED") {
       return {
-        order: mapOrderSummary(order),
+        order: mapOrderSummary(order, await paymentService.buildOrderPaymentSession(order)),
         profile: this.mapProfileSummary(profile),
         alreadyProcessed: true,
       };
@@ -670,7 +686,10 @@ class CommercialAccessService {
     if (markPaidResult.count === 0) {
       if (latestOrder.status === "PAID" || latestOrder.status === "MANUAL_GRANTED") {
         return {
-          order: mapOrderSummary(latestOrder),
+          order: mapOrderSummary(
+            latestOrder,
+            await paymentService.buildOrderPaymentSession(latestOrder),
+          ),
           profile: this.mapProfileSummary(profile),
           alreadyProcessed: true,
         };
@@ -721,7 +740,10 @@ class CommercialAccessService {
     });
 
     return {
-      order: mapOrderSummary(latestOrder),
+      order: mapOrderSummary(
+        latestOrder,
+        await paymentService.buildOrderPaymentSession(latestOrder),
+      ),
       profile: this.mapProfileSummary(updatedProfile),
       alreadyProcessed: false,
     };

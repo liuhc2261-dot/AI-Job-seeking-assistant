@@ -30,6 +30,21 @@ export const env = {
   posthogHost:
     process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
   commerceCallbackSecret: process.env.COMMERCE_CALLBACK_SECRET ?? "",
+  wechatPayAppId: process.env.WECHAT_PAY_APP_ID ?? "",
+  wechatPayMerchantId: process.env.WECHAT_PAY_MCH_ID ?? "",
+  wechatPaySerialNo: process.env.WECHAT_PAY_SERIAL_NO ?? "",
+  wechatPayPrivateKey: process.env.WECHAT_PAY_PRIVATE_KEY ?? "",
+  wechatPayApiV3Key: process.env.WECHAT_PAY_API_V3_KEY ?? "",
+  wechatPayPlatformPublicKey: process.env.WECHAT_PAY_PLATFORM_PUBLIC_KEY ?? "",
+  wechatPayNotifyPath:
+    process.env.WECHAT_PAY_NOTIFY_PATH ?? "/api/payments/wechat/notify",
+  alipayAppId: process.env.ALIPAY_APP_ID ?? "",
+  alipayPrivateKey: process.env.ALIPAY_PRIVATE_KEY ?? "",
+  alipayPublicKey: process.env.ALIPAY_PUBLIC_KEY ?? "",
+  alipayGatewayUrl:
+    process.env.ALIPAY_GATEWAY_URL ?? "https://openapi.alipay.com/gateway.do",
+  alipayNotifyPath:
+    process.env.ALIPAY_NOTIFY_PATH ?? "/api/payments/alipay/notify",
   puppeteerExecutablePath: process.env.PUPPETEER_EXECUTABLE_PATH ?? "",
   exportStorageDriver: process.env.EXPORT_STORAGE_DRIVER ?? "local",
   exportStorageBucket: process.env.EXPORT_STORAGE_BUCKET ?? "",
@@ -99,6 +114,32 @@ export function getSystemReadiness(): ReadinessItem[] {
       configured: Boolean(env.commerceCallbackSecret),
       description:
         "Recommended in production so payment callbacks can confirm orders and grant credits safely.",
+    },
+    {
+      key: "wechatPay",
+      label: "WeChat Pay",
+      configured: Boolean(
+        env.wechatPayAppId &&
+          env.wechatPayMerchantId &&
+          env.wechatPaySerialNo &&
+          env.wechatPayPrivateKey &&
+          env.wechatPayApiV3Key &&
+          env.wechatPayPlatformPublicKey,
+      ),
+      description:
+        "Required for WeChat Pay Native order creation, callback verification, and decryption.",
+    },
+    {
+      key: "alipay",
+      label: "Alipay",
+      configured: Boolean(
+        env.alipayAppId &&
+          env.alipayPrivateKey &&
+          env.alipayPublicKey &&
+          env.alipayGatewayUrl,
+      ),
+      description:
+        "Required for Alipay precreate order creation and async notification signature verification.",
     },
     {
       key: "pdfBrowser",
