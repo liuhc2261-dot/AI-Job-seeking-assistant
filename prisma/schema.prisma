@@ -50,6 +50,31 @@ enum ExportStatus {
   FAILED
 }
 
+enum CommerceAccessTier {
+  TRIAL
+  PAID
+}
+
+enum CommercePlanCode {
+  TRIAL
+  JD_DIAGNOSE_PACK_29
+}
+
+enum CommerceOrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+  REFUNDED
+  MANUAL_GRANTED
+}
+
+enum CommerceUsageFeature {
+  MASTER_RESUME_GENERATE
+  JD_TAILOR
+  DIAGNOSE
+  PDF_EXPORT
+}
+
 model User {
   id               String            @id @default(uuid()) @db.Uuid
   email            String            @unique
@@ -71,6 +96,9 @@ model User {
   diagnosisReports DiagnosisReport[]
   exports          Export[]
   auditLogs        AuditLog[]
+  commerceProfile  UserCommerceProfile?
+  commerceOrders   CommerceOrder[]
+  commerceUsageEvents CommerceUsageEvent[]
 
   @@map("users")
 }
@@ -310,4 +338,69 @@ model AuditLog {
   @@index([userId])
   @@index([resourceType, resourceId])
   @@map("audit_logs")
+}
+
+model UserCommerceProfile {
+  id                           String             @id @default(uuid()) @db.Uuid
+  userId                       String             @unique @map("user_id") @db.Uuid
+  accessTier                   CommerceAccessTier @default(TRIAL) @map("access_tier")
+  planCode                     CommercePlanCode   @default(TRIAL) @map("plan_code")
+  masterResumeCreditsRemaining Int                @default(1) @map("master_resume_credits_remaining")
+  jdTailorCreditsRemaining     Int                @default(1) @map("jd_tailor_credits_remaining")
+  diagnosisCreditsRemaining    Int                @default(1) @map("diagnosis_credits_remaining")
+  pdfExportCreditsRemaining    Int                @default(1) @map("pdf_export_credits_remaining")
+  hasUnlimitedExports          Boolean            @default(false) @map("has_unlimited_exports")
+  activatedAt                  DateTime?          @map("activated_at")
+  createdAt                    DateTime           @default(now()) @map("created_at")
+  updatedAt                    DateTime           @updatedAt @map("updated_at")
+  user                         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders                       CommerceOrder[]
+  usageEvents                  CommerceUsageEvent[]
+
+  @@index([userId])
+  @@index([accessTier])
+  @@map("user_commerce_profiles")
+}
+
+model CommerceOrder {
+  id              String              @id @default(uuid()) @db.Uuid
+  userId          String              @map("user_id") @db.Uuid
+  profileId       String?             @map("profile_id") @db.Uuid
+  planCode        CommercePlanCode    @map("plan_code")
+  amountCents     Int                 @map("amount_cents")
+  currency        String              @default("CNY")
+  status          CommerceOrderStatus @default(PENDING)
+  paymentChannel  String?             @map("payment_channel")
+  externalOrderId String?             @unique @map("external_order_id")
+  notes           String?
+  paidAt          DateTime?           @map("paid_at")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profile         UserCommerceProfile? @relation(fields: [profileId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([profileId])
+  @@index([status])
+  @@map("commerce_orders")
+}
+
+model CommerceUsageEvent {
+  id             String               @id @default(uuid()) @db.Uuid
+  userId         String               @map("user_id") @db.Uuid
+  profileId      String?              @map("profile_id") @db.Uuid
+  feature        CommerceUsageFeature
+  creditsChanged Int                  @default(1) @map("credits_changed")
+  remainingAfter Int?                 @map("remaining_after")
+  resourceType   String?              @map("resource_type")
+  resourceId     String?              @map("resource_id")
+  metadata       Json?
+  createdAt      DateTime             @default(now()) @map("created_at")
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profile        UserCommerceProfile? @relation(fields: [profileId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([profileId])
+  @@index([feature])
+  @@map("commerce_usage_events")
 }

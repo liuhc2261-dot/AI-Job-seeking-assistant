@@ -86,6 +86,9 @@ class AuthService {
               email: input.email,
             },
           },
+          commerceProfile: {
+            create: {},
+          },
         },
         include: {
           profile: true,

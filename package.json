@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "node --import ./test/register-hooks.mjs --test --test-concurrency=1 ./test/minimal-regression.test.mjs",
     "verify:integrations": "node ./scripts/verify-integrations.mjs",
+    "commerce:grant": "node ./scripts/grant-paid-pack.mjs",
     "db:generate": "prisma generate",
     "db:deploy": "prisma migrate deploy",
     "db:migrate": "prisma migrate dev",

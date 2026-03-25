@@ -1,7 +1,10 @@
+import type { Prisma } from "@prisma/client";
+
 import { resumeContentJsonSchema } from "@/ai/schemas/resume-generator";
 import { prisma } from "@/lib/db";
 import { ExportStorageError, exportFileStorage } from "@/lib/export-storage";
 import { captureServerException } from "@/lib/monitoring/sentry";
+import { commercialAccessService } from "@/services/commercial-access-service";
 import type {
   ExportFormatOption,
   ExportTemplate,
@@ -254,6 +257,7 @@ class ExportService {
     resumeVersionId: string;
     templateName: string;
   }): Promise<ResumeExportRecord> {
+    await commercialAccessService.assertFeatureAvailable(input.userId, "pdf_export");
     const sourceVersion = await this.findSourceVersionOrThrow(input);
     const pendingExport = await this.createPendingExport({
       userId: input.userId,
@@ -277,18 +281,41 @@ class ExportService {
         contentType: "application/pdf",
       });
 
-      const updatedExport = await this.completeExport({
-        exportId: pendingExport.id,
-        fileSize: pdfBuffer.byteLength,
-      });
+      const updatedExport = await prisma.$transaction(async (tx) => {
+        const completedExport = await this.completeExport(
+          {
+            exportId: pendingExport.id,
+            fileSize: pdfBuffer.byteLength,
+          },
+          tx,
+        );
 
-      await this.createAuditLog({
-        userId: input.userId,
-        resumeId: input.resumeId,
-        resumeVersionId: input.resumeVersionId,
-        exportType: "PDF",
-        exportId: updatedExport.id,
-        templateName: updatedExport.templateName,
+        await this.createAuditLog(
+          {
+            userId: input.userId,
+            resumeId: input.resumeId,
+            resumeVersionId: input.resumeVersionId,
+            exportType: "PDF",
+            exportId: completedExport.id,
+            templateName: completedExport.templateName,
+          },
+          tx,
+        );
+
+        await commercialAccessService.recordSuccessfulFeatureUsage({
+          userId: input.userId,
+          feature: "pdf_export",
+          resourceType: "EXPORT",
+          resourceId: completedExport.id,
+          metadata: {
+            resumeId: input.resumeId,
+            resumeVersionId: input.resumeVersionId,
+            templateName: completedExport.templateName,
+          },
+          tx,
+        });
+
+        return completedExport;
       });
 
       return this.mapExportRecord(updatedExport);
@@ -587,11 +614,14 @@ class ExportService {
     });
   }
 
-  private async completeExport(input: {
-    exportId: string;
-    fileSize: number;
-  }) {
-    return prisma.export.update({
+  private async completeExport(
+    input: {
+      exportId: string;
+      fileSize: number;
+    },
+    client: typeof prisma | Prisma.TransactionClient = prisma,
+  ) {
+    return client.export.update({
       where: {
         id: input.exportId,
       },
@@ -608,15 +638,18 @@ class ExportService {
     });
   }
 
-  private async createAuditLog(input: {
-    userId: string;
-    resumeId: string;
-    resumeVersionId: string;
-    exportType: "MARKDOWN" | "PDF";
-    exportId: string;
-    templateName: string;
-  }) {
-    await prisma.auditLog.create({
+  private async createAuditLog(
+    input: {
+      userId: string;
+      resumeId: string;
+      resumeVersionId: string;
+      exportType: "MARKDOWN" | "PDF";
+      exportId: string;
+      templateName: string;
+    },
+    client: typeof prisma | Prisma.TransactionClient = prisma,
+  ) {
+    await client.auditLog.create({
       data: {
         userId: input.userId,
         actionType: "EXPORT_CREATED",

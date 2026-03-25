@@ -4,6 +4,7 @@ import { jdParserAgent } from "@/ai/orchestrators/jd-parser-agent";
 import { resumeContentJsonSchema } from "@/ai/schemas/resume-generator";
 import { createEmptyResumeContent } from "@/lib/resume-document";
 import { prisma } from "@/lib/db";
+import { commercialAccessService } from "@/services/commercial-access-service";
 import type { JDAnalysisRecord } from "@/types/jd";
 import type { ResumeContentJson } from "@/types/resume";
 
@@ -252,6 +253,7 @@ class JDAnalysisService {
     resumeVersionId: string;
     jdText: string;
   }): Promise<JDAnalysisRecord> {
+    await commercialAccessService.assertFeatureAvailable(input.userId, "jd_tailor");
     const sourceVersion = await prisma.resumeVersion.findFirst({
       where: {
         id: input.resumeVersionId,
@@ -280,6 +282,7 @@ class JDAnalysisService {
 
     const parsedResume = parseResumeContent(sourceVersion.contentJson);
     const jdResult = await jdParserAgent.parse({
+      userId: input.userId,
       jdText: input.jdText,
     });
     const matchGaps = computeMatchGaps({
@@ -287,30 +290,46 @@ class JDAnalysisService {
       requiredSkills: jdResult.requiredSkills,
       parsedKeywords: jdResult.parsedKeywords,
     }).slice(0, 8);
-    const analysis = await prisma.jDAnalysis.create({
-      data: {
-        userId: input.userId,
-        resumeVersionId: input.resumeVersionId,
-        rawJdText: sanitizeJdText(input.jdText),
-        parsedKeywords: toJsonValue(jdResult.parsedKeywords),
-        responsibilities: toJsonValue(jdResult.responsibilities),
-        requiredSkills: toJsonValue(jdResult.requiredSkills),
-        matchGaps: toJsonValue(matchGaps),
-        modelName: jdResult.meta.model,
-      },
-    });
+    const analysis = await prisma.$transaction(async (tx) => {
+      const createdAnalysis = await tx.jDAnalysis.create({
+        data: {
+          userId: input.userId,
+          resumeVersionId: input.resumeVersionId,
+          rawJdText: sanitizeJdText(input.jdText),
+          parsedKeywords: toJsonValue(jdResult.parsedKeywords),
+          responsibilities: toJsonValue(jdResult.responsibilities),
+          requiredSkills: toJsonValue(jdResult.requiredSkills),
+          matchGaps: toJsonValue(matchGaps),
+          modelName: jdResult.meta.model,
+        },
+      });
 
-    await prisma.auditLog.create({
-      data: {
+      await tx.auditLog.create({
+        data: {
+          userId: input.userId,
+          actionType: "JD_PARSED",
+          resourceType: "JD_ANALYSIS",
+          resourceId: createdAnalysis.id,
+          payload: {
+            resumeId: input.resumeId,
+            resumeVersionId: input.resumeVersionId,
+          },
+        },
+      });
+
+      await commercialAccessService.recordSuccessfulFeatureUsage({
         userId: input.userId,
-        actionType: "JD_PARSED",
+        feature: "jd_tailor",
         resourceType: "JD_ANALYSIS",
-        resourceId: analysis.id,
-        payload: {
+        resourceId: createdAnalysis.id,
+        metadata: {
           resumeId: input.resumeId,
           resumeVersionId: input.resumeVersionId,
         },
-      },
+        tx,
+      });
+
+      return createdAnalysis;
     });
 
     return {

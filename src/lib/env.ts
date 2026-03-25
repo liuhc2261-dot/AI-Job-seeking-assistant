@@ -12,6 +12,14 @@ export const env = {
   appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   openAiApiKey: process.env.OPENAI_API_KEY ?? "",
   openAiModel: process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
+  openAiTrialModel:
+    process.env.OPENAI_TRIAL_MODEL ??
+    process.env.OPENAI_MODEL ??
+    "gpt-4.1-mini",
+  openAiPaidModel:
+    process.env.OPENAI_PAID_MODEL ??
+    process.env.OPENAI_MODEL ??
+    "gpt-4.1-mini",
   sentryDsn:
     process.env.SENTRY_DSN ?? process.env.NEXT_PUBLIC_SENTRY_DSN ?? "",
   sentryAuthToken: process.env.SENTRY_AUTH_TOKEN ?? "",
@@ -21,6 +29,7 @@ export const env = {
     "",
   posthogHost:
     process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
+  commerceCallbackSecret: process.env.COMMERCE_CALLBACK_SECRET ?? "",
   puppeteerExecutablePath: process.env.PUPPETEER_EXECUTABLE_PATH ?? "",
   exportStorageDriver: process.env.EXPORT_STORAGE_DRIVER ?? "local",
   exportStorageBucket: process.env.EXPORT_STORAGE_BUCKET ?? "",
@@ -83,6 +92,13 @@ export function getSystemReadiness(): ReadinessItem[] {
       configured: Boolean(env.posthogKey),
       description:
         "Required if you want register, generate, optimize, diagnose, and export events in analytics.",
+    },
+    {
+      key: "commerceCallbackSecret",
+      label: "Commerce callback secret",
+      configured: Boolean(env.commerceCallbackSecret),
+      description:
+        "Recommended in production so payment callbacks can confirm orders and grant credits safely.",
     },
     {
       key: "pdfBrowser",

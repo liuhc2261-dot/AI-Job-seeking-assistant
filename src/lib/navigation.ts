@@ -14,6 +14,6 @@ export const workspaceNav: NavItem[] = [
   { href: "/onboarding", label: "新手引导" },
   { href: "/profile", label: "资料建档" },
   { href: "/resumes", label: "简历中心" },
+  { href: "/billing", label: "套餐中心" },
   { href: "/settings", label: "设置" },
 ];
-

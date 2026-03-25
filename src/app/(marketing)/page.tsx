@@ -8,16 +8,16 @@ const productPillars = [
   {
     title: "建档资产化",
     description:
-      "基础信息、教育、项目、实习、奖项和技能都会真实落库，并沉淀为后续 ResumeGeneratorAgent 使用的 profile snapshot。",
+      "基础信息、教育、项目、实习、奖项和技能都会真实落库，并沉淀为后续生成链路使用的 profile snapshot。",
     highlight:
-      "当前已接通真实表单、服务层和数据库链路，可以直接继续完善个人资料。",
+      "当前已经接通真实表单、服务层和数据库链路，可以直接继续完善个人资料。",
   },
   {
     title: "岗位导向优化",
     description:
       "围绕 JD 关键词、职责和匹配差距生成岗位版简历，而不是泛化改写。",
     highlight:
-      "已支持 JD 解析、岗位定制、差异展示和版本来源追踪。",
+      "已经支持 JD 解析、岗位定制、差异展示和版本来源追踪。",
   },
   {
     title: "可解释与可回滚",
@@ -31,9 +31,9 @@ const productPillars = [
     description:
       "以 Markdown + JSON 双存为基础，支持服务端 HTML 渲染后导出 PDF。",
     highlight:
-      "Markdown 与 PDF 导出都已打通，并会写入 exports 和 audit_logs。",
+      "Markdown 和 PDF 导出都已打通，并会写入导出历史和审计日志。",
   },
-];
+] as const;
 
 const workflow = [
   "建档",
@@ -41,8 +41,14 @@ const workflow = [
   "JD 定制",
   "简历诊断",
   "版本管理",
-  "PDF/Markdown 导出",
-];
+  "PDF / Markdown 导出",
+] as const;
+
+const pricingHighlights = [
+  "免费试用：1 次母版生成、1 次 JD 定制、1 次诊断、1 次 PDF 导出",
+  "29 元冲刺包：10 次 JD 定制、10 次诊断、无限版本保存、无限导出",
+  "试用默认模型 GPT-5.1，付费套餐自动切换到 GPT-5.4",
+] as const;
 
 export default async function HomePage() {
   const session = await getAuthSession();
@@ -54,9 +60,9 @@ export default async function HomePage() {
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 lg:px-8">
         <section className="grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
           <SectionCard
-            eyebrow="已打通主流程"
+            eyebrow="主链路已打通"
             title="岗位导向型 AI 求职简历助手"
-            description="当前版本已经完成建档、母版简历生成、JD 定制优化、简历诊断、版本管理和 Markdown/PDF 导出主链路，并接入认证、审计日志与基础监控。"
+            description="当前版本已经完成建档、母版简历生成、JD 定制优化、简历诊断、版本管理和 Markdown / PDF 导出，并接入认证、审计日志与基础监控。"
             className="overflow-hidden"
           >
             <div className="space-y-6">
@@ -79,10 +85,10 @@ export default async function HomePage() {
                   {session?.user ? "进入工作台" : "创建账号并开始"}
                 </Link>
                 <Link
-                  href="/login"
+                  href={session?.user ? "/billing" : "/login"}
                   className="rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-semibold text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
                 >
-                  查看登录入口
+                  {session?.user ? "查看套餐中心" : "已有账号，直接登录"}
                 </Link>
               </div>
             </div>
@@ -97,7 +103,7 @@ export default async function HomePage() {
               <li>前端：Next.js 16 / React 19 / TypeScript / Tailwind CSS 4</li>
               <li>后端：App Router Route Handlers + Server Actions</li>
               <li>数据层：PostgreSQL + Prisma，核心实体已完整建模</li>
-              <li>认证：NextAuth Credentials 模式，已支持注册、登录和密码重置</li>
+              <li>认证：NextAuth Credentials，支持注册、登录和密码重置</li>
             </ul>
           </SectionCard>
         </section>
@@ -115,6 +121,41 @@ export default async function HomePage() {
               </div>
             </SectionCard>
           ))}
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+          <SectionCard
+            eyebrow="Pricing"
+            title="29 元冲刺包已经可下单"
+            description="当前版本已经支持试用转付费、订单创建、支付确认和权益自动发放，适合先做小范围收费内测。"
+          >
+            <div className="space-y-3 text-sm leading-6 text-[color:var(--muted)]">
+              {pricingHighlights.map((item) => (
+                <p key={item}>{item}</p>
+              ))}
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            eyebrow="Go Live"
+            title="先跑通一笔真实收费"
+            description="建议先让 3 到 10 个真实用户走完一次建档、定制、诊断和付费升级，再根据转化和留存继续调价格与文案。"
+          >
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href={session?.user ? "/billing" : "/register"}
+                className="rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
+              >
+                {session?.user ? "进入套餐中心" : "注册并开始试用"}
+              </Link>
+              <Link
+                href={session?.user ? "/settings" : "/login"}
+                className="rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-semibold text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+              >
+                {session?.user ? "查看系统配置" : "查看登录入口"}
+              </Link>
+            </div>
+          </SectionCard>
         </section>
       </main>
     </div>

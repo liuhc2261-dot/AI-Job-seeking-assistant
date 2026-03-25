@@ -54,6 +54,7 @@ const knownSkillKeywords = [
 ];
 
 type JdParserAgentInput = {
+  userId: string;
   jdText: string;
 };
 
@@ -266,6 +267,7 @@ function buildFallbackJdAnalysis(jdText: string) {
 
 class JdParserAgent {
   async parse({
+    userId,
     jdText,
   }: JdParserAgentInput): Promise<JdParserAgentResult> {
     const sanitizedText = sanitizeJdText(jdText);
@@ -274,6 +276,7 @@ class JdParserAgent {
       jdText: sanitizedText,
     });
     const aiResult = await aiService.generateStructuredData({
+      userId,
       taskType: "jd_parse",
       schema: jdParserResultSchema,
       systemPrompt: prompts.systemPrompt,

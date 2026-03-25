@@ -10,6 +10,7 @@ import type { DiagnosisRuleResult } from "@/types/diagnosis";
 import type { ResumeContentJson } from "@/types/resume";
 
 type ResumeDiagnoserAgentInput = {
+  userId: string;
   sourceResume: ResumeContentJson;
   jdAnalysis: JDAnalysisRecord | null;
   ruleDiagnosis: DiagnosisRuleResult;
@@ -55,6 +56,7 @@ function dedupeSuggestions(result: ResumeDiagnoserStructuredResult) {
 
 class ResumeDiagnoserAgent {
   async diagnose({
+    userId,
     sourceResume,
     jdAnalysis,
     ruleDiagnosis,
@@ -65,6 +67,7 @@ class ResumeDiagnoserAgent {
       ruleDiagnosis,
     });
     const aiResult = await aiService.generateStructuredData({
+      userId,
       taskType: "resume_diagnose",
       schema: resumeDiagnoserResultSchema,
       systemPrompt: prompts.systemPrompt,

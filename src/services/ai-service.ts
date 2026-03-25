@@ -2,14 +2,17 @@ import type { z } from "zod";
 
 import { parseStructuredOutput } from "@/ai/parsers/structured-output";
 import { env } from "@/lib/env";
+import { commercialAccessService } from "@/services/commercial-access-service";
 
 type GenerateStructuredDataInput<T> = {
+  userId?: string;
   taskType: string;
   systemPrompt: string;
   userPrompt: string;
   schema: z.ZodType<T>;
   temperature?: number;
   fallback?: () => Promise<T> | T;
+  modelOverride?: string;
 };
 
 type AiGenerationMeta = {
@@ -25,22 +28,28 @@ export type AiGenerationResult<T> = {
 
 class AiService {
   async generateStructuredData<T>({
+    userId,
     taskType,
     systemPrompt,
     userPrompt,
     schema,
     temperature = 0.2,
     fallback,
+    modelOverride,
   }: GenerateStructuredDataInput<T>): Promise<AiGenerationResult<T>> {
     if (!env.openAiApiKey) {
       return this.resolveFallback(fallback);
     }
 
+    const model =
+      modelOverride?.trim() ||
+      (userId ? await commercialAccessService.getAiModelForUser(userId) : env.openAiModel);
     let lastError: unknown = null;
 
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
         const rawOutput = await this.requestOpenAi({
+          model,
           systemPrompt,
           userPrompt,
           temperature,
@@ -50,7 +59,7 @@ class AiService {
           data: parseStructuredOutput(rawOutput, schema),
           meta: {
             provider: "openai",
-            model: env.openAiModel,
+            model,
             usedFallback: false,
           },
         };
@@ -60,7 +69,7 @@ class AiService {
     }
 
     console.error(`[ai-service] ${taskType} failed`, {
-      model: env.openAiModel,
+      model,
       message: lastError instanceof Error ? lastError.message : "unknown_error",
     });
 
@@ -68,6 +77,7 @@ class AiService {
   }
 
   private async requestOpenAi(input: {
+    model: string;
     systemPrompt: string;
     userPrompt: string;
     temperature: number;
@@ -79,7 +89,7 @@ class AiService {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: env.openAiModel,
+        model: input.model,
         temperature: input.temperature,
         response_format: {
           type: "json_object",

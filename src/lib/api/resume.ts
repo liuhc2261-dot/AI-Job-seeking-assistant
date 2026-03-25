@@ -1,6 +1,7 @@
 import { getAuthSession } from "@/auth";
 import { apiError } from "@/lib/http";
 import { captureServerException } from "@/lib/monitoring/sentry";
+import { CommercialAccessServiceError } from "@/services/commercial-access-service";
 import { ExportServiceError } from "@/services/export-service";
 import { JDAnalysisServiceError } from "@/services/jd-analysis-service";
 import { ResumeDiagnosisServiceError } from "@/services/resume-diagnosis-service";
@@ -158,6 +159,30 @@ export function getResumeApiErrorResponse(error: unknown) {
           },
         });
         return apiError("导出处理失败，请稍后重试。", 500);
+    }
+  }
+
+  if (error instanceof CommercialAccessServiceError) {
+    switch (error.code) {
+      case "MASTER_RESUME_LIMIT_REACHED":
+        return apiError("免费试用的母版生成次数已用完，请升级 29 元套餐后继续使用。", 402, error.details);
+      case "JD_TAILOR_LIMIT_REACHED":
+        return apiError("JD 定制次数已用完，请升级或续费 29 元套餐后继续使用。", 402, error.details);
+      case "DIAGNOSIS_LIMIT_REACHED":
+        return apiError("简历诊断次数已用完，请升级或续费 29 元套餐后继续使用。", 402, error.details);
+      case "PDF_EXPORT_LIMIT_REACHED":
+        return apiError("PDF 导出次数已用完，请升级 29 元套餐后继续使用。", 402, error.details);
+      case "USER_NOT_FOUND":
+        return apiError("账号不存在，暂时无法处理套餐权益。", 404);
+      default:
+        captureServerException(error, {
+          area: "resume-api",
+          tags: {
+            errorType: "CommercialAccessServiceError",
+            code: error.code,
+          },
+        });
+        return apiError("套餐权益处理失败，请稍后重试。", 500);
     }
   }
 

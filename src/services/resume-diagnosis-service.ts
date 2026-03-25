@@ -9,6 +9,7 @@ import { resumeDiagnoserAgent } from "@/ai/orchestrators/resume-diagnoser-agent"
 import { resumeContentJsonSchema } from "@/ai/schemas/resume-generator";
 import { renderResumeMarkdown } from "@/lib/resume-document";
 import { prisma } from "@/lib/db";
+import { commercialAccessService } from "@/services/commercial-access-service";
 import { guardrailService } from "@/services/guardrail-service";
 import {
   buildDiagnosisScoreOverview,
@@ -422,6 +423,7 @@ class ResumeDiagnosisService {
   }
 
   async diagnoseVersion(input: DiagnoseVersionInput): Promise<DiagnosisReportRecord> {
+    await commercialAccessService.assertFeatureAvailable(input.userId, "diagnose");
     const sourceVersion = await prisma.resumeVersion.findFirst({
       where: {
         id: input.resumeVersionId,
@@ -481,6 +483,7 @@ class ResumeDiagnosisService {
       jdAnalysis: resolvedAnalysis,
     });
     const aiDiagnosis = await resumeDiagnoserAgent.diagnose({
+      userId: input.userId,
       sourceResume,
       jdAnalysis: resolvedAnalysis,
       ruleDiagnosis,
@@ -491,30 +494,47 @@ class ResumeDiagnosisService {
       aiDiagnosis.suggestions,
     );
     const scoreOverview = buildDiagnosisScoreOverview(issues);
-    const report = await prisma.diagnosisReport.create({
-      data: {
-        userId: input.userId,
-        resumeVersionId: input.resumeVersionId,
-        inputJdAnalysisId: resolvedAnalysis?.id ?? null,
-        scoreOverview: toJsonValue(scoreOverview),
-        issues: toJsonValue(issues),
-        suggestions: toJsonValue(suggestions),
-        modelName: aiDiagnosis.meta.model,
-      },
-    });
+    const report = await prisma.$transaction(async (tx) => {
+      const createdReport = await tx.diagnosisReport.create({
+        data: {
+          userId: input.userId,
+          resumeVersionId: input.resumeVersionId,
+          inputJdAnalysisId: resolvedAnalysis?.id ?? null,
+          scoreOverview: toJsonValue(scoreOverview),
+          issues: toJsonValue(issues),
+          suggestions: toJsonValue(suggestions),
+          modelName: aiDiagnosis.meta.model,
+        },
+      });
 
-    await prisma.auditLog.create({
-      data: {
+      await tx.auditLog.create({
+        data: {
+          userId: input.userId,
+          actionType: "DIAGNOSIS_CREATED",
+          resourceType: "DIAGNOSIS_REPORT",
+          resourceId: createdReport.id,
+          payload: {
+            resumeId: input.resumeId,
+            resumeVersionId: input.resumeVersionId,
+            inputJdAnalysisId: resolvedAnalysis?.id ?? null,
+          },
+        },
+      });
+
+      await commercialAccessService.recordSuccessfulFeatureUsage({
         userId: input.userId,
-        actionType: "DIAGNOSIS_CREATED",
+        feature: "diagnose",
         resourceType: "DIAGNOSIS_REPORT",
-        resourceId: report.id,
-        payload: {
+        resourceId: createdReport.id,
+        metadata: {
           resumeId: input.resumeId,
           resumeVersionId: input.resumeVersionId,
           inputJdAnalysisId: resolvedAnalysis?.id ?? null,
         },
-      },
+        tx,
+      });
+
+      return createdReport;
     });
 
     return mapDiagnosisReport(report);

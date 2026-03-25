@@ -16,6 +16,7 @@ import type {
 import { resumeGenerationStyleOptions } from "@/types/resume";
 
 type ResumeGeneratorAgentInput = {
+  userId: string;
   profileSnapshot: ProfileSnapshot;
   style: ResumeGenerationStyle;
 };
@@ -172,6 +173,7 @@ function buildFallbackResume(
 
 class ResumeGeneratorAgent {
   async generate({
+    userId,
     profileSnapshot,
     style,
   }: ResumeGeneratorAgentInput): Promise<ResumeGeneratorAgentResult> {
@@ -182,6 +184,7 @@ class ResumeGeneratorAgent {
       style,
     });
     const aiResult = await aiService.generateStructuredData({
+      userId,
       taskType: "resume_generate",
       schema: resumeGeneratorResultSchema,
       systemPrompt: prompts.systemPrompt,

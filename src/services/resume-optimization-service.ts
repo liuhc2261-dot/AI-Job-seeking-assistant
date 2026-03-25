@@ -97,9 +97,10 @@ class ResumeOptimizationService {
         }
 
         throw error;
-      });
+    });
     const sourceResume = parseResumeContent(sourceVersion.contentJson);
     const optimizedResume = await resumeOptimizerAgent.optimize({
+      userId: input.userId,
       sourceResume,
       jdAnalysis,
     });

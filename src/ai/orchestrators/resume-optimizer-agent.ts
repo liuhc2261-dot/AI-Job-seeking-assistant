@@ -14,6 +14,7 @@ import type {
 } from "@/types/resume";
 
 type ResumeOptimizerAgentInput = {
+  userId: string;
   sourceResume: ResumeContentJson;
   jdAnalysis: JDAnalysisRecord;
 };
@@ -268,6 +269,7 @@ function buildFallbackOptimizedResume(input: {
 
 class ResumeOptimizerAgent {
   async optimize({
+    userId,
     sourceResume,
     jdAnalysis,
   }: ResumeOptimizerAgentInput): Promise<ResumeOptimizerAgentResult> {
@@ -280,6 +282,7 @@ class ResumeOptimizerAgent {
       jdAnalysis,
     });
     const aiResult = await aiService.generateStructuredData({
+      userId,
       taskType: "resume_optimize",
       schema: resumeOptimizerResultSchema,
       systemPrompt: prompts.systemPrompt,

@@ -13,8 +13,12 @@ const resumeDocumentMockUrl = toTestFileUrl("mocks/lib-resume-document.mjs");
 const profileServiceMockUrl = toTestFileUrl("mocks/services-profile-service.mjs");
 const resumeGeneratorAgentMockUrl = toTestFileUrl("mocks/ai-resume-generator-agent.mjs");
 const resumeApiMockUrl = toTestFileUrl("mocks/lib-api-resume.mjs");
+const commercialApiMockUrl = toTestFileUrl("mocks/lib-api-commercial.mjs");
 const exportStorageMockUrl = toTestFileUrl("mocks/lib-export-storage.mjs");
 const exportServiceMockUrl = toTestFileUrl("mocks/services-export-service.mjs");
+const commercialAccessServiceMockUrl = toTestFileUrl(
+  "mocks/services-commercial-access-service.mjs",
+);
 const resumeServiceMockUrl = toTestFileUrl("mocks/services-resume-service.mjs");
 
 function createResumeContent(overrides = {}) {
@@ -639,6 +643,248 @@ function createProfilePrismaMock(state) {
   };
 }
 
+function createCommercialPrismaMock(state) {
+  function findUser(where) {
+    if (where.id) {
+      return state.users.find((user) => user.id === where.id) ?? null;
+    }
+
+    if (where.email) {
+      return state.users.find((user) => user.email === where.email) ?? null;
+    }
+
+    return null;
+  }
+
+  function buildCommercialProfile(createInput) {
+    state.nextCommercialProfileId = (state.nextCommercialProfileId ?? 0) + 1;
+    const now = nextDate(state);
+
+    return {
+      id: `commerce-profile-${state.nextCommercialProfileId}`,
+      userId: createInput.userId,
+      accessTier: "TRIAL",
+      planCode: "TRIAL",
+      masterResumeCreditsRemaining: 1,
+      jdTailorCreditsRemaining: 1,
+      diagnosisCreditsRemaining: 1,
+      pdfExportCreditsRemaining: 1,
+      hasUnlimitedExports: false,
+      activatedAt: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+  }
+
+  function getCommercialProfile(where) {
+    if (where.id) {
+      return state.commerceProfiles.find((profile) => profile.id === where.id) ?? null;
+    }
+
+    if (where.userId) {
+      return (
+        state.commerceProfiles.find((profile) => profile.userId === where.userId) ?? null
+      );
+    }
+
+    return null;
+  }
+
+  function applyProfileMutation(profile, data) {
+    const updatedProfile = profile;
+
+    for (const [key, value] of Object.entries(data)) {
+      if (value && typeof value === "object" && "decrement" in value) {
+        updatedProfile[key] -= value.decrement;
+        continue;
+      }
+
+      updatedProfile[key] = cloneValue(value);
+    }
+
+    updatedProfile.updatedAt = nextDate(state);
+
+    return updatedProfile;
+  }
+
+  function getCommerceOrder(where) {
+    return (
+      state.commerceOrders.find((order) => {
+        return (
+          (!where.id || order.id === where.id) &&
+          (!where.userId || order.userId === where.userId) &&
+          (!where.planCode || order.planCode === where.planCode) &&
+          (!where.status || order.status === where.status)
+        );
+      }) ?? null
+    );
+  }
+
+  function applyOrderMutation(order, data) {
+    const updatedOrder = order;
+
+    for (const [key, value] of Object.entries(data)) {
+      updatedOrder[key] = cloneValue(value);
+    }
+
+    updatedOrder.updatedAt = nextDate(state);
+
+    return updatedOrder;
+  }
+
+  const transactionApi = {
+    user: {
+      async findUnique({ where, select }) {
+        const user = findUser(where);
+
+        if (!user) {
+          return null;
+        }
+
+        return select ? pickFields(user, select) : cloneValue(user);
+      },
+      async findFirst({ where, select }) {
+        const user = findUser(where);
+
+        if (!user) {
+          return null;
+        }
+
+        return select ? pickFields(user, select) : cloneValue(user);
+      },
+    },
+    userCommerceProfile: {
+      async findUnique({ where }) {
+        const profile = getCommercialProfile(where);
+
+        return profile ? cloneValue(profile) : null;
+      },
+      async upsert({ where, create }) {
+        const existingProfile = getCommercialProfile(where);
+
+        if (existingProfile) {
+          return cloneValue(existingProfile);
+        }
+
+        const createdProfile = {
+          ...buildCommercialProfile(create),
+          ...cloneValue(create),
+        };
+
+        state.commerceProfiles.push(createdProfile);
+
+        return cloneValue(createdProfile);
+      },
+      async update({ where, data }) {
+        const profile = getCommercialProfile(where);
+
+        if (!profile) {
+          throw new Error(`TEST_COMMERCE_PROFILE_NOT_FOUND:${JSON.stringify(where)}`);
+        }
+
+        return cloneValue(applyProfileMutation(profile, data));
+      },
+      async updateMany({ where, data }) {
+        const profile = getCommercialProfile(where);
+
+        if (!profile) {
+          return { count: 0 };
+        }
+
+        const limitedField = Object.entries(where).find(([, value]) => {
+          return value && typeof value === "object" && "gt" in value;
+        });
+
+        if (limitedField) {
+          const [fieldName, rule] = limitedField;
+
+          if (!(profile[fieldName] > rule.gt)) {
+            return { count: 0 };
+          }
+        }
+
+        applyProfileMutation(profile, data);
+
+        return { count: 1 };
+      },
+    },
+    commerceUsageEvent: {
+      async create({ data }) {
+        state.commerceUsageEvents.push({
+          id: `usage-event-${state.commerceUsageEvents.length + 1}`,
+          ...cloneValue(data),
+          createdAt: nextDate(state),
+        });
+
+        return cloneValue(state.commerceUsageEvents.at(-1));
+      },
+    },
+    commerceOrder: {
+      async findFirst({ where }) {
+        const order = getCommerceOrder(where);
+
+        return order ? cloneValue(order) : null;
+      },
+      async findUnique({ where }) {
+        const order = getCommerceOrder(where);
+
+        return order ? cloneValue(order) : null;
+      },
+      async findMany({ where, orderBy }) {
+        const direction = orderBy?.createdAt === "asc" ? 1 : -1;
+
+        return state.commerceOrders
+          .filter((order) => {
+            return (
+              (!where?.userId || order.userId === where.userId) &&
+              (!where?.status || order.status === where.status)
+            );
+          })
+          .sort(
+            (left, right) =>
+              (left.createdAt.getTime() - right.createdAt.getTime()) * direction,
+          )
+          .map((order) => cloneValue(order));
+      },
+      async create({ data }) {
+        state.commerceOrders.push({
+          id: `commerce-order-${state.commerceOrders.length + 1}`,
+          ...cloneValue(data),
+          createdAt: nextDate(state),
+          updatedAt: nextDate(state),
+        });
+
+        return cloneValue(state.commerceOrders.at(-1));
+      },
+      async updateMany({ where, data }) {
+        const order = getCommerceOrder(where);
+
+        if (!order) {
+          return { count: 0 };
+        }
+
+        applyOrderMutation(order, data);
+
+        return { count: 1 };
+      },
+    },
+    auditLog: {
+      async create({ data }) {
+        state.auditLogs.push(cloneValue(data));
+
+        return cloneValue(data);
+      },
+    },
+  };
+
+  return {
+    ...transactionApi,
+    $transaction(callback) {
+      return callback(transactionApi);
+    },
+  };
+}
+
 beforeEach(() => {
   resetTestState();
   mock.method(console, "info", () => undefined);
@@ -649,6 +895,311 @@ beforeEach(() => {
 afterEach(() => {
   mock.restoreAll();
   resetTestState();
+});
+
+describe("commercial access service", () => {
+  let previousTrialModel;
+  let previousPaidModel;
+
+  beforeEach(() => {
+    previousTrialModel = process.env.OPENAI_TRIAL_MODEL;
+    previousPaidModel = process.env.OPENAI_PAID_MODEL;
+    process.env.OPENAI_TRIAL_MODEL = "gpt-5.1";
+    process.env.OPENAI_PAID_MODEL = "gpt-5.4";
+  });
+
+  afterEach(() => {
+    if (previousTrialModel === undefined) {
+      delete process.env.OPENAI_TRIAL_MODEL;
+    } else {
+      process.env.OPENAI_TRIAL_MODEL = previousTrialModel;
+    }
+
+    if (previousPaidModel === undefined) {
+      delete process.env.OPENAI_PAID_MODEL;
+    } else {
+      process.env.OPENAI_PAID_MODEL = previousPaidModel;
+    }
+  });
+
+  it("creates a trial commerce profile lazily and routes free users to GPT-5.1", async () => {
+    const state = {
+      clockTick: 0,
+      users: [
+        {
+          id: "user-1",
+          email: "trial@example.com",
+        },
+      ],
+      commerceProfiles: [],
+      commerceUsageEvents: [],
+      commerceOrders: [],
+      auditLogs: [],
+    };
+
+    globalThis.__testPrisma = createCommercialPrismaMock(state);
+    setModuleMocks([["@/lib/db", dbMockUrl]]);
+
+    const { commercialAccessService } = await importFreshModule(
+      "src/services/commercial-access-service.ts",
+    );
+    const summary = await commercialAccessService.getCommercialProfileSummary("user-1");
+    const model = await commercialAccessService.getAiModelForUser("user-1");
+
+    assert.equal(summary.accessTier, "trial");
+    assert.equal(summary.planCode, "trial");
+    assert.equal(summary.quotas.jdTailorCreditsRemaining, 1);
+    assert.equal(summary.quotas.diagnosisCreditsRemaining, 1);
+    assert.equal(model, "gpt-5.1");
+    assert.equal(state.commerceProfiles.length, 1);
+  });
+
+  it("deducts credits once per successful usage and blocks exhausted JD quotas", async () => {
+    const state = {
+      clockTick: 0,
+      users: [
+        {
+          id: "user-1",
+          email: "trial@example.com",
+        },
+      ],
+      commerceProfiles: [
+        {
+          id: "commerce-profile-1",
+          userId: "user-1",
+          accessTier: "TRIAL",
+          planCode: "TRIAL",
+          masterResumeCreditsRemaining: 1,
+          jdTailorCreditsRemaining: 1,
+          diagnosisCreditsRemaining: 1,
+          pdfExportCreditsRemaining: 1,
+          hasUnlimitedExports: false,
+          activatedAt: null,
+          createdAt: new Date("2026-03-20T10:00:00Z"),
+          updatedAt: new Date("2026-03-20T10:00:00Z"),
+        },
+      ],
+      commerceUsageEvents: [],
+      commerceOrders: [],
+      auditLogs: [],
+    };
+
+    globalThis.__testPrisma = createCommercialPrismaMock(state);
+    setModuleMocks([["@/lib/db", dbMockUrl]]);
+
+    const { commercialAccessService, CommercialAccessServiceError } =
+      await importFreshModule("src/services/commercial-access-service.ts");
+
+    const summary = await commercialAccessService.recordSuccessfulFeatureUsage({
+      userId: "user-1",
+      feature: "jd_tailor",
+      resourceType: "JD_ANALYSIS",
+      resourceId: "analysis-1",
+    });
+
+    assert.equal(summary.quotas.jdTailorCreditsRemaining, 0);
+    assert.equal(state.commerceUsageEvents.length, 1);
+    assert.equal(state.commerceUsageEvents[0].feature, "JD_TAILOR");
+    assert.equal(state.commerceUsageEvents[0].remainingAfter, 0);
+
+    await assert.rejects(
+      commercialAccessService.recordSuccessfulFeatureUsage({
+        userId: "user-1",
+        feature: "jd_tailor",
+        resourceType: "JD_ANALYSIS",
+        resourceId: "analysis-2",
+      }),
+      (error) =>
+        error instanceof CommercialAccessServiceError &&
+        error.code === "JD_TAILOR_LIMIT_REACHED",
+    );
+  });
+
+  it("grants the paid pack and upgrades the account to GPT-5.4 with extra credits", async () => {
+    const state = {
+      clockTick: 0,
+      users: [
+        {
+          id: "user-1",
+          email: "paid@example.com",
+        },
+      ],
+      commerceProfiles: [
+        {
+          id: "commerce-profile-1",
+          userId: "user-1",
+          accessTier: "TRIAL",
+          planCode: "TRIAL",
+          masterResumeCreditsRemaining: 0,
+          jdTailorCreditsRemaining: 1,
+          diagnosisCreditsRemaining: 0,
+          pdfExportCreditsRemaining: 1,
+          hasUnlimitedExports: false,
+          activatedAt: null,
+          createdAt: new Date("2026-03-20T10:00:00Z"),
+          updatedAt: new Date("2026-03-20T10:00:00Z"),
+        },
+      ],
+      commerceUsageEvents: [],
+      commerceOrders: [],
+      auditLogs: [],
+    };
+
+    globalThis.__testPrisma = createCommercialPrismaMock(state);
+    setModuleMocks([["@/lib/db", dbMockUrl]]);
+
+    const { commercialAccessService } = await importFreshModule(
+      "src/services/commercial-access-service.ts",
+    );
+    const result = await commercialAccessService.grantPaidPack({
+      userId: "user-1",
+      paymentChannel: "wechat",
+      externalOrderId: "wx_001",
+      notes: "launch_test",
+    });
+
+    assert.equal(result.profile.accessTier, "paid");
+    assert.equal(result.profile.currentAiModel, "gpt-5.4");
+    assert.equal(result.profile.quotas.masterResumeCreditsRemaining, 1);
+    assert.equal(result.profile.quotas.jdTailorCreditsRemaining, 11);
+    assert.equal(result.profile.quotas.diagnosisCreditsRemaining, 10);
+    assert.equal(result.profile.quotas.hasUnlimitedExports, true);
+    assert.equal(state.commerceOrders.length, 1);
+    assert.equal(state.commerceOrders[0].status, "PAID");
+    assert.equal(state.auditLogs[0].actionType, "COMMERCE_ORDER_GRANTED");
+  });
+
+  it("creates a pending checkout order once and reuses it on repeated checkout clicks", async () => {
+    const state = {
+      clockTick: 0,
+      users: [
+        {
+          id: "user-1",
+          email: "checkout@example.com",
+        },
+      ],
+      commerceProfiles: [
+        {
+          id: "commerce-profile-1",
+          userId: "user-1",
+          accessTier: "TRIAL",
+          planCode: "TRIAL",
+          masterResumeCreditsRemaining: 1,
+          jdTailorCreditsRemaining: 1,
+          diagnosisCreditsRemaining: 1,
+          pdfExportCreditsRemaining: 1,
+          hasUnlimitedExports: false,
+          activatedAt: null,
+          createdAt: new Date("2026-03-20T10:00:00Z"),
+          updatedAt: new Date("2026-03-20T10:00:00Z"),
+        },
+      ],
+      commerceUsageEvents: [],
+      commerceOrders: [],
+      auditLogs: [],
+    };
+
+    globalThis.__testPrisma = createCommercialPrismaMock(state);
+    setModuleMocks([["@/lib/db", dbMockUrl]]);
+
+    const { commercialAccessService } = await importFreshModule(
+      "src/services/commercial-access-service.ts",
+    );
+    const firstCheckout = await commercialAccessService.createCheckoutOrder({
+      userId: "user-1",
+      planCode: "jd_diagnose_pack_29",
+      paymentChannel: "wechat",
+    });
+    const secondCheckout = await commercialAccessService.createCheckoutOrder({
+      userId: "user-1",
+      planCode: "jd_diagnose_pack_29",
+      paymentChannel: "wechat",
+    });
+
+    assert.equal(firstCheckout.reusedExistingOrder, false);
+    assert.equal(secondCheckout.reusedExistingOrder, true);
+    assert.equal(state.commerceOrders.length, 1);
+    assert.equal(state.commerceOrders[0].status, "PENDING");
+    assert.equal(state.auditLogs[0].actionType, "COMMERCE_ORDER_CREATED");
+  });
+
+  it("confirms a pending order idempotently and grants credits only once", async () => {
+    const state = {
+      clockTick: 0,
+      users: [
+        {
+          id: "user-1",
+          email: "checkout@example.com",
+        },
+      ],
+      commerceProfiles: [
+        {
+          id: "commerce-profile-1",
+          userId: "user-1",
+          accessTier: "TRIAL",
+          planCode: "TRIAL",
+          masterResumeCreditsRemaining: 0,
+          jdTailorCreditsRemaining: 1,
+          diagnosisCreditsRemaining: 1,
+          pdfExportCreditsRemaining: 1,
+          hasUnlimitedExports: false,
+          activatedAt: null,
+          createdAt: new Date("2026-03-20T10:00:00Z"),
+          updatedAt: new Date("2026-03-20T10:00:00Z"),
+        },
+      ],
+      commerceUsageEvents: [],
+      commerceOrders: [
+        {
+          id: "commerce-order-1",
+          userId: "user-1",
+          profileId: "commerce-profile-1",
+          planCode: "JD_DIAGNOSE_PACK_29",
+          amountCents: 2900,
+          currency: "CNY",
+          status: "PENDING",
+          paymentChannel: "wechat",
+          externalOrderId: null,
+          notes: "checkout_created",
+          paidAt: null,
+          createdAt: new Date("2026-03-20T11:00:00Z"),
+          updatedAt: new Date("2026-03-20T11:00:00Z"),
+        },
+      ],
+      auditLogs: [],
+    };
+
+    globalThis.__testPrisma = createCommercialPrismaMock(state);
+    setModuleMocks([["@/lib/db", dbMockUrl]]);
+
+    const { commercialAccessService } = await importFreshModule(
+      "src/services/commercial-access-service.ts",
+    );
+    const firstConfirm = await commercialAccessService.confirmOrderPaid({
+      orderId: "commerce-order-1",
+      userId: "user-1",
+      paymentChannel: "wechat",
+      externalOrderId: "wx_001",
+    });
+    const secondConfirm = await commercialAccessService.confirmOrderPaid({
+      orderId: "commerce-order-1",
+      userId: "user-1",
+      paymentChannel: "wechat",
+      externalOrderId: "wx_001",
+    });
+
+    assert.equal(firstConfirm.alreadyProcessed, false);
+    assert.equal(secondConfirm.alreadyProcessed, true);
+    assert.equal(firstConfirm.profile.accessTier, "paid");
+    assert.equal(firstConfirm.profile.currentAiModel, "gpt-5.4");
+    assert.equal(firstConfirm.profile.quotas.masterResumeCreditsRemaining, 1);
+    assert.equal(firstConfirm.profile.quotas.jdTailorCreditsRemaining, 11);
+    assert.equal(firstConfirm.profile.quotas.diagnosisCreditsRemaining, 11);
+    assert.equal(firstConfirm.profile.quotas.hasUnlimitedExports, true);
+    assert.equal(state.commerceOrders[0].status, "PAID");
+    assert.equal(state.auditLogs.length, 1);
+    assert.equal(state.auditLogs[0].actionType, "COMMERCE_ORDER_PAID");
+  });
 });
 
 describe("export-service minimal regression", () => {
@@ -2535,6 +3086,31 @@ describe("route smoke tests", () => {
           { status: 500 },
         );
       },
+      };
+  }
+
+  function createCommercialApiMocks({
+    userId = "user-1",
+    callbackAuthorized = false,
+  } = {}) {
+    globalThis.__testLibApiCommercial = {
+      async getAuthenticatedCommercialUserId() {
+        return userId;
+      },
+      hasValidCommerceCallbackSecret() {
+        return callbackAuthorized;
+      },
+      getCommercialApiErrorResponse(error) {
+        return Response.json(
+          {
+            success: false,
+            error: {
+              message: error instanceof Error ? error.message : "unknown_error",
+            },
+          },
+          { status: 500 },
+        );
+      },
     };
   }
 
@@ -2958,5 +3534,170 @@ describe("route smoke tests", () => {
     });
     assert.equal(payload.data.deletedVersionId, "version-1");
     assert.equal(payload.data.deletedWasCurrent, true);
+  });
+
+  it("POST /api/commerce/checkout delegates to commercialAccessService.createCheckoutOrder", async () => {
+    createCommercialApiMocks();
+
+    let capturedInput = null;
+    globalThis.__testCommercialAccessService = {
+      async createCheckoutOrder(input) {
+        capturedInput = input;
+
+        return {
+          order: {
+            id: "commerce-order-1",
+            planCode: "jd_diagnose_pack_29",
+            amountCents: 2900,
+            currency: "CNY",
+            status: "pending",
+            paymentChannel: "wechat",
+            externalOrderId: null,
+            paidAt: null,
+            createdAt: "2026-03-20T10:00:00.000Z",
+          },
+          profile: {
+            accessTier: "trial",
+            planCode: "trial",
+            planLabel: "免费试用",
+            amountCents: 0,
+            currentAiModel: "gpt-5.1",
+            quotas: {
+              masterResumeCreditsRemaining: 1,
+              jdTailorCreditsRemaining: 1,
+              diagnosisCreditsRemaining: 1,
+              pdfExportCreditsRemaining: 1,
+              hasUnlimitedExports: false,
+            },
+            activatedAt: null,
+          },
+          plan: {
+            code: "jd_diagnose_pack_29",
+            label: "29 元 JD 定制 / 诊断冲刺包",
+            amountCents: 2900,
+            currentAiModel: "gpt-5.4",
+            masterResumeCredits: 0,
+            jdTailorCredits: 10,
+            diagnosisCredits: 10,
+            pdfExportCredits: null,
+            hasUnlimitedExports: true,
+          },
+          reusedExistingOrder: false,
+        };
+      },
+    };
+
+    setModuleMocks([
+      ["@/lib/api/commercial", commercialApiMockUrl],
+      ["@/services/commercial-access-service", commercialAccessServiceMockUrl],
+    ]);
+
+    const routeModule = await importFreshModule(
+      "src/app/api/commerce/checkout/route.ts",
+    );
+    const response = await routeModule.POST(
+      new Request("http://localhost/api/commerce/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          planCode: "jd_diagnose_pack_29",
+          paymentChannel: "wechat",
+        }),
+      }),
+    );
+    const payload = await response.json();
+
+    assert.equal(response.status, 201);
+    assert.deepEqual(capturedInput, {
+      userId: "user-1",
+      planCode: "jd_diagnose_pack_29",
+      paymentChannel: "wechat",
+    });
+    assert.equal(payload.data.order.id, "commerce-order-1");
+  });
+
+  it("POST /api/commerce/orders/[orderId]/confirm delegates to commercialAccessService.confirmOrderPaid", async () => {
+    createCommercialApiMocks({
+      userId: "user-1",
+      callbackAuthorized: false,
+    });
+
+    let capturedInput = null;
+    globalThis.__testCommercialAccessService = {
+      async confirmOrderPaid(input) {
+        capturedInput = input;
+
+        return {
+          order: {
+            id: "commerce-order-1",
+            planCode: "jd_diagnose_pack_29",
+            amountCents: 2900,
+            currency: "CNY",
+            status: "manual_granted",
+            paymentChannel: "wechat",
+            externalOrderId: "wx_001",
+            paidAt: "2026-03-20T10:05:00.000Z",
+            createdAt: "2026-03-20T10:00:00.000Z",
+          },
+          profile: {
+            accessTier: "paid",
+            planCode: "jd_diagnose_pack_29",
+            planLabel: "29 元 JD 定制 / 诊断冲刺包",
+            amountCents: 2900,
+            currentAiModel: "gpt-5.4",
+            quotas: {
+              masterResumeCreditsRemaining: 1,
+              jdTailorCreditsRemaining: 11,
+              diagnosisCreditsRemaining: 11,
+              pdfExportCreditsRemaining: null,
+              hasUnlimitedExports: true,
+            },
+            activatedAt: "2026-03-20T10:05:00.000Z",
+          },
+          alreadyProcessed: false,
+        };
+      },
+    };
+
+    setModuleMocks([
+      ["@/lib/api/commercial", commercialApiMockUrl],
+      ["@/services/commercial-access-service", commercialAccessServiceMockUrl],
+    ]);
+
+    const routeModule = await importFreshModule(
+      "src/app/api/commerce/orders/[orderId]/confirm/route.ts",
+    );
+    const response = await routeModule.POST(
+      new Request("http://localhost/api/commerce/orders/commerce-order-1/confirm", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          paymentChannel: "wechat",
+          externalOrderId: "wx_001",
+        }),
+      }),
+      {
+        params: Promise.resolve({
+          orderId: "commerce-order-1",
+        }),
+      },
+    );
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(capturedInput, {
+      orderId: "commerce-order-1",
+      userId: "user-1",
+      paymentChannel: "wechat",
+      externalOrderId: "wx_001",
+      notes: undefined,
+      paidStatus: "MANUAL_GRANTED",
+    });
+    assert.equal(payload.data.profile.accessTier, "paid");
+    assert.equal(payload.data.order.status, "manual_granted");
   });
 });

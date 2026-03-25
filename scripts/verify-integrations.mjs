@@ -89,6 +89,13 @@ function verifyLocalReadiness() {
         : "NEXT_PUBLIC_APP_URL is empty",
     },
     {
+      name: "commerceCallbackSecret",
+      status: readEnv("COMMERCE_CALLBACK_SECRET") ? "ok" : "missing",
+      detail: readEnv("COMMERCE_CALLBACK_SECRET")
+        ? "COMMERCE_CALLBACK_SECRET configured"
+        : "COMMERCE_CALLBACK_SECRET is empty",
+    },
+    {
       name: "exportStorage",
       status: exportStorageConfigured ? "ok" : "missing",
       detail:
@@ -101,7 +108,9 @@ function verifyLocalReadiness() {
 
 async function verifyOpenAi() {
   const apiKey = readEnv("OPENAI_API_KEY");
-  const model = readEnv("OPENAI_MODEL", "gpt-4.1-mini");
+  const trialModel = readEnv("OPENAI_TRIAL_MODEL", readEnv("OPENAI_MODEL", "gpt-4.1-mini"));
+  const paidModel = readEnv("OPENAI_PAID_MODEL", readEnv("OPENAI_MODEL", "gpt-4.1-mini"));
+  const model = paidModel || trialModel;
 
   if (!apiKey) {
     return {
@@ -161,7 +170,9 @@ async function verifyOpenAi() {
   return {
     name: "openai",
     status: content ? "ok" : "error",
-    detail: content ? `chat completion succeeded with model ${model}` : "empty response content",
+    detail: content
+      ? `chat completion succeeded with paid model ${model} (trial model: ${trialModel || "n/a"})`
+      : "empty response content",
     responsePreview: previewText(content || bodyText),
   };
 }

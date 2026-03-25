@@ -32,4 +32,6 @@ export function resetTestState() {
   delete globalThis.__testExportService;
   delete globalThis.__testExportStorage;
   delete globalThis.__testResumeService;
+  delete globalThis.__testCommercialAccessService;
+  delete globalThis.__testLibApiCommercial;
 }

@@ -12,6 +12,8 @@ export const telemetryEvents = {
   onboardingCompleted: "onboarding_completed",
   resumeGenerateClicked: "resume_generate_clicked",
   resumeGenerateSuccess: "resume_generate_success",
+  checkoutStarted: "checkout_started",
+  checkoutPaid: "checkout_paid",
   jdParseSuccess: "jd_parse_success",
   resumeOptimizeSuccess: "resume_optimize_success",
   diagnoseSuccess: "diagnose_success",

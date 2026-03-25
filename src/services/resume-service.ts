@@ -7,6 +7,7 @@ import {
 import { resumeGeneratorAgent } from "@/ai/orchestrators/resume-generator-agent";
 import { createEmptyResumeContent, renderResumeMarkdown } from "@/lib/resume-document";
 import { prisma } from "@/lib/db";
+import { commercialAccessService } from "@/services/commercial-access-service";
 import { profileService } from "@/services/profile-service";
 import { resumeGenerationStyleOptions } from "@/types/resume";
 import type {
@@ -306,6 +307,10 @@ class ResumeService {
   }
 
   async generateMasterResume(userId: string, style: ResumeGenerationStyle) {
+    await commercialAccessService.assertFeatureAvailable(
+      userId,
+      "master_resume_generate",
+    );
     const profileSnapshot = await profileService.getProfileSnapshot(userId);
     const missingModules = profileSnapshot.completion.missingSlugs.map((slug) => {
       return profileSnapshot.modules.find((module) => module.slug === slug)?.title ?? slug;
@@ -316,6 +321,7 @@ class ResumeService {
     }
 
     const generatedResume = await resumeGeneratorAgent.generate({
+      userId,
       profileSnapshot,
       style,
     });
@@ -414,6 +420,17 @@ class ResumeService {
             style,
           },
         },
+      });
+
+      await commercialAccessService.recordSuccessfulFeatureUsage({
+        userId,
+        feature: "master_resume_generate",
+        resourceType: "RESUME",
+        resourceId: resume.id,
+        metadata: {
+          style,
+        },
+        tx,
       });
 
       return resume.id;
