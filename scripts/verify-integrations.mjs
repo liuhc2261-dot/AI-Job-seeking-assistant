@@ -122,40 +122,51 @@ function verifyLocalReadiness() {
     {
       name: "wechatPay",
       status:
-        hasConfiguredValue("WECHAT_PAY_APP_ID") &&
-        hasConfiguredValue("WECHAT_PAY_MCH_ID") &&
-        hasConfiguredValue("WECHAT_PAY_SERIAL_NO") &&
-        hasConfiguredValue("WECHAT_PAY_PRIVATE_KEY") &&
-        hasConfiguredValue("WECHAT_PAY_API_V3_KEY") &&
-        hasConfiguredValue("WECHAT_PAY_PLATFORM_PUBLIC_KEY")
+        (hasConfiguredValue("WECHAT_PAY_APP_ID") &&
+          hasConfiguredValue("WECHAT_PAY_MCH_ID") &&
+          hasConfiguredValue("WECHAT_PAY_SERIAL_NO") &&
+          hasConfiguredValue("WECHAT_PAY_PRIVATE_KEY") &&
+          hasConfiguredValue("WECHAT_PAY_API_V3_KEY") &&
+          hasConfiguredValue("WECHAT_PAY_PLATFORM_PUBLIC_KEY")) ||
+        hasConfiguredValue("WECHAT_PERSONAL_COLLECTION_QR_URL")
           ? "ok"
           : "missing",
-      detail:
-        hasConfiguredValue("WECHAT_PAY_APP_ID") &&
-        hasConfiguredValue("WECHAT_PAY_MCH_ID") &&
-        hasConfiguredValue("WECHAT_PAY_SERIAL_NO") &&
-        hasConfiguredValue("WECHAT_PAY_PRIVATE_KEY") &&
-        hasConfiguredValue("WECHAT_PAY_API_V3_KEY") &&
-        hasConfiguredValue("WECHAT_PAY_PLATFORM_PUBLIC_KEY")
+      detail: hasConfiguredValue("WECHAT_PERSONAL_COLLECTION_QR_URL")
+        ? "WeChat personal collection QR configured"
+        : (hasConfiguredValue("WECHAT_PAY_APP_ID") &&
+            hasConfiguredValue("WECHAT_PAY_MCH_ID") &&
+            hasConfiguredValue("WECHAT_PAY_SERIAL_NO") &&
+            hasConfiguredValue("WECHAT_PAY_PRIVATE_KEY") &&
+            hasConfiguredValue("WECHAT_PAY_API_V3_KEY") &&
+            hasConfiguredValue("WECHAT_PAY_PLATFORM_PUBLIC_KEY"))
           ? "WeChat Pay Native callback and signing config present"
-          : "WeChat Pay env vars are incomplete",
+          : "WeChat payment env vars are incomplete",
     },
     {
       name: "alipay",
       status:
-        hasConfiguredValue("ALIPAY_APP_ID") &&
-        hasConfiguredValue("ALIPAY_PRIVATE_KEY") &&
-        hasConfiguredValue("ALIPAY_PUBLIC_KEY") &&
-        hasConfiguredValue("ALIPAY_GATEWAY_URL")
+        (hasConfiguredValue("ALIPAY_APP_ID") &&
+          hasConfiguredValue("ALIPAY_PRIVATE_KEY") &&
+          hasConfiguredValue("ALIPAY_PUBLIC_KEY") &&
+          hasConfiguredValue("ALIPAY_GATEWAY_URL")) ||
+        hasConfiguredValue("ALIPAY_PERSONAL_COLLECTION_QR_URL")
           ? "ok"
           : "missing",
-      detail:
-        hasConfiguredValue("ALIPAY_APP_ID") &&
-        hasConfiguredValue("ALIPAY_PRIVATE_KEY") &&
-        hasConfiguredValue("ALIPAY_PUBLIC_KEY") &&
-        hasConfiguredValue("ALIPAY_GATEWAY_URL")
+      detail: hasConfiguredValue("ALIPAY_PERSONAL_COLLECTION_QR_URL")
+        ? "Alipay personal collection QR configured"
+        : (hasConfiguredValue("ALIPAY_APP_ID") &&
+            hasConfiguredValue("ALIPAY_PRIVATE_KEY") &&
+            hasConfiguredValue("ALIPAY_PUBLIC_KEY") &&
+            hasConfiguredValue("ALIPAY_GATEWAY_URL"))
           ? "Alipay precreate and notify verification config present"
-          : "Alipay env vars are incomplete",
+          : "Alipay payment env vars are incomplete",
+    },
+    {
+      name: "personalPaymentContact",
+      status: hasConfiguredValue("PERSONAL_PAYMENT_CONTACT") ? "ok" : "missing",
+      detail: hasConfiguredValue("PERSONAL_PAYMENT_CONTACT")
+        ? "manual review contact configured"
+        : "PERSONAL_PAYMENT_CONTACT is empty",
     },
     {
       name: "exportStorage",

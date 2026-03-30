@@ -1,7 +1,7 @@
 import { getAuthSession } from "@/auth";
+import { env } from "@/lib/env";
 import { apiError } from "@/lib/http";
 import { captureServerException } from "@/lib/monitoring/sentry";
-import { env } from "@/lib/env";
 import { CommercialAccessServiceError } from "@/services/commercial-access-service";
 import { PaymentServiceError } from "@/services/payment-service";
 
@@ -12,7 +12,9 @@ export async function getAuthenticatedCommercialUserId() {
 }
 
 export function hasValidCommerceCallbackSecret(request: Request) {
-  const incomingSecret = request.headers.get("x-commerce-callback-secret")?.trim();
+  const incomingSecret = request.headers
+    .get("x-commerce-callback-secret")
+    ?.trim();
 
   return Boolean(
     env.commerceCallbackSecret &&
@@ -25,13 +27,21 @@ export function getCommercialApiErrorResponse(error: unknown) {
   if (error instanceof PaymentServiceError) {
     switch (error.code) {
       case "PAYMENT_PROVIDER_NOT_CONFIGURED":
-        return apiError("支付通道尚未配置完成，请稍后重试。", 503, error.details);
+        return apiError(
+          "支付通道尚未配置完成，请稍后重试。",
+          503,
+          error.details,
+        );
       case "PAYMENT_SIGNATURE_INVALID":
         return apiError("支付回调验签失败。", 401, error.details);
       case "PAYMENT_CALLBACK_INVALID":
         return apiError("支付回调内容不合法。", 400, error.details);
       case "PAYMENT_GATEWAY_ERROR":
-        return apiError("支付网关创建订单失败，请稍后重试。", 502, error.details);
+        return apiError(
+          "支付网关创建订单失败，请稍后重试。",
+          502,
+          error.details,
+        );
       case "PAYMENT_CHANNEL_NOT_SUPPORTED":
         return apiError("当前支付方式暂不支持。", 400, error.details);
       default:
@@ -55,7 +65,11 @@ export function getCommercialApiErrorResponse(error: unknown) {
       case "ORDER_NOT_FOUND":
         return apiError("订单不存在或无权访问。", 404);
       case "ORDER_NOT_PAYABLE":
-        return apiError("当前订单状态不允许再次确认支付。", 409, error.details);
+        return apiError(
+          "当前订单状态不允许再次确认支付。",
+          409,
+          error.details,
+        );
       case "MASTER_RESUME_LIMIT_REACHED":
       case "JD_TAILOR_LIMIT_REACHED":
       case "DIAGNOSIS_LIMIT_REACHED":

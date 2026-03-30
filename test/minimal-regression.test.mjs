@@ -19,6 +19,7 @@ const exportServiceMockUrl = toTestFileUrl("mocks/services-export-service.mjs");
 const commercialAccessServiceMockUrl = toTestFileUrl(
   "mocks/services-commercial-access-service.mjs",
 );
+const personalPaymentsMockUrl = toTestFileUrl("mocks/lib-payments-personal.mjs");
 const paymentServiceMockUrl = toTestFileUrl("mocks/services-payment-service.mjs");
 const resumeServiceMockUrl = toTestFileUrl("mocks/services-resume-service.mjs");
 
@@ -1135,6 +1136,35 @@ describe("commercial access service", () => {
     assert.equal(state.commerceOrders.length, 1);
     assert.equal(state.commerceOrders[0].status, "PENDING");
     assert.equal(state.auditLogs[0].actionType, "COMMERCE_ORDER_CREATED");
+  });
+
+  it("uses personal collection QR codes when merchant payment config is unavailable", async () => {
+    globalThis.__testPrisma = createCommercialPrismaMock({
+      clockTick: 0,
+      users: [],
+      commerceProfiles: [],
+      commerceUsageEvents: [],
+      commerceOrders: [],
+      auditLogs: [],
+    });
+    setModuleMocks([
+      ["@/lib/db", dbMockUrl],
+      ["@/lib/payments", personalPaymentsMockUrl],
+    ]);
+
+    const { paymentService } = await importFreshModule(
+      "src/services/payment-service.ts",
+    );
+    const session = await paymentService.createCheckoutSession({
+      orderId: "commerce-order-1",
+      amountCents: 2900,
+      planLabel: "29 元冲刺包",
+      paymentChannel: "wechat",
+    });
+
+    assert.equal(session.status, "ready");
+    assert.equal(session.qrCodeDataUrl, "https://example.com/payments/wechat-qr.png");
+    assert.equal(session.displayTitle, "微信个人收款码");
   });
 
   it("confirms a pending order idempotently and grants credits only once", async () => {

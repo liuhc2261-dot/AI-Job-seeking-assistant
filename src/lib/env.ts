@@ -5,14 +5,51 @@ type ReadinessItem = {
   description: string;
 };
 
+function hasConfiguredValue(value: string | undefined | null) {
+  const normalized = (value ?? "").trim();
+
+  if (!normalized) {
+    return false;
+  }
+
+  return !/^<replace-with-.*>$/.test(normalized) && !/^<.*>$/.test(normalized);
+}
+
+function hasWechatMerchantConfig() {
+  return (
+    hasConfiguredValue(process.env.WECHAT_PAY_APP_ID) &&
+    hasConfiguredValue(process.env.WECHAT_PAY_MCH_ID) &&
+    hasConfiguredValue(process.env.WECHAT_PAY_SERIAL_NO) &&
+    hasConfiguredValue(process.env.WECHAT_PAY_PRIVATE_KEY) &&
+    hasConfiguredValue(process.env.WECHAT_PAY_API_V3_KEY) &&
+    hasConfiguredValue(process.env.WECHAT_PAY_PLATFORM_PUBLIC_KEY)
+  );
+}
+
+function hasAlipayMerchantConfig() {
+  return (
+    hasConfiguredValue(process.env.ALIPAY_APP_ID) &&
+    hasConfiguredValue(process.env.ALIPAY_PRIVATE_KEY) &&
+    hasConfiguredValue(process.env.ALIPAY_PUBLIC_KEY) &&
+    hasConfiguredValue(process.env.ALIPAY_GATEWAY_URL)
+  );
+}
+
+function hasWechatPersonalQrConfig() {
+  return hasConfiguredValue(process.env.WECHAT_PERSONAL_COLLECTION_QR_URL);
+}
+
+function hasAlipayPersonalQrConfig() {
+  return hasConfiguredValue(process.env.ALIPAY_PERSONAL_COLLECTION_QR_URL);
+}
+
 export const env = {
   databaseUrl: process.env.DATABASE_URL ?? "",
   authSecret: process.env.AUTH_SECRET ?? "",
   authTrustHost: process.env.AUTH_TRUST_HOST ?? "false",
   appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   openAiApiKey: process.env.OPENAI_API_KEY ?? "",
-  openAiBaseUrl:
-    process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1",
+  openAiBaseUrl: process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1",
   openAiModel: process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
   openAiTrialModel:
     process.env.OPENAI_TRIAL_MODEL ??
@@ -37,9 +74,12 @@ export const env = {
   wechatPaySerialNo: process.env.WECHAT_PAY_SERIAL_NO ?? "",
   wechatPayPrivateKey: process.env.WECHAT_PAY_PRIVATE_KEY ?? "",
   wechatPayApiV3Key: process.env.WECHAT_PAY_API_V3_KEY ?? "",
-  wechatPayPlatformPublicKey: process.env.WECHAT_PAY_PLATFORM_PUBLIC_KEY ?? "",
+  wechatPayPlatformPublicKey:
+    process.env.WECHAT_PAY_PLATFORM_PUBLIC_KEY ?? "",
   wechatPayNotifyPath:
     process.env.WECHAT_PAY_NOTIFY_PATH ?? "/api/payments/wechat/notify",
+  wechatPersonalCollectionQrUrl:
+    process.env.WECHAT_PERSONAL_COLLECTION_QR_URL ?? "",
   alipayAppId: process.env.ALIPAY_APP_ID ?? "",
   alipayPrivateKey: process.env.ALIPAY_PRIVATE_KEY ?? "",
   alipayPublicKey: process.env.ALIPAY_PUBLIC_KEY ?? "",
@@ -47,6 +87,9 @@ export const env = {
     process.env.ALIPAY_GATEWAY_URL ?? "https://openapi.alipay.com/gateway.do",
   alipayNotifyPath:
     process.env.ALIPAY_NOTIFY_PATH ?? "/api/payments/alipay/notify",
+  alipayPersonalCollectionQrUrl:
+    process.env.ALIPAY_PERSONAL_COLLECTION_QR_URL ?? "",
+  personalPaymentContact: process.env.PERSONAL_PAYMENT_CONTACT ?? "",
   puppeteerExecutablePath: process.env.PUPPETEER_EXECUTABLE_PATH ?? "",
   exportStorageDriver: process.env.EXPORT_STORAGE_DRIVER ?? "local",
   exportStorageBucket: process.env.EXPORT_STORAGE_BUCKET ?? "",
@@ -66,6 +109,11 @@ export function getSystemReadiness(): ReadinessItem[] {
       Boolean(env.exportStorageAccessKeyId) &&
       Boolean(env.exportStorageSecretAccessKey) &&
       (exportStorageDriver !== "r2" || Boolean(env.exportStorageEndpoint)));
+
+  const wechatConfigured =
+    hasWechatMerchantConfig() || hasWechatPersonalQrConfig();
+  const alipayConfigured =
+    hasAlipayMerchantConfig() || hasAlipayPersonalQrConfig();
 
   return [
     {
@@ -119,29 +167,26 @@ export function getSystemReadiness(): ReadinessItem[] {
     },
     {
       key: "wechatPay",
-      label: "WeChat Pay",
-      configured: Boolean(
-        env.wechatPayAppId &&
-          env.wechatPayMerchantId &&
-          env.wechatPaySerialNo &&
-          env.wechatPayPrivateKey &&
-          env.wechatPayApiV3Key &&
-          env.wechatPayPlatformPublicKey,
-      ),
-      description:
-        "Required for WeChat Pay Native order creation, callback verification, and decryption.",
+      label: "WeChat collection",
+      configured: wechatConfigured,
+      description: hasWechatMerchantConfig()
+        ? "Using WeChat Pay merchant mode with callback verification."
+        : "Configure a personal WeChat collection QR code for manual review mode.",
     },
     {
       key: "alipay",
-      label: "Alipay",
-      configured: Boolean(
-        env.alipayAppId &&
-          env.alipayPrivateKey &&
-          env.alipayPublicKey &&
-          env.alipayGatewayUrl,
-      ),
+      label: "Alipay collection",
+      configured: alipayConfigured,
+      description: hasAlipayMerchantConfig()
+        ? "Using Alipay merchant mode with async notification verification."
+        : "Configure a personal Alipay collection QR code for manual review mode.",
+    },
+    {
+      key: "personalPaymentContact",
+      label: "Manual payment contact",
+      configured: Boolean(env.personalPaymentContact),
       description:
-        "Required for Alipay precreate order creation and async notification signature verification.",
+        "Optional contact shown to users when you use personal collection QR codes.",
     },
     {
       key: "pdfBrowser",

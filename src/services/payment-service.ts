@@ -6,6 +6,9 @@ import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
 import {
   createUnavailablePaymentSession,
+  getPersonalCollectionQrUrl,
+  hasMerchantPaymentConfig,
+  hasPersonalCollectionQr,
   isPaymentChannelConfigured,
   normalizeMultilineSecret,
   normalizePem,
@@ -100,7 +103,11 @@ function verifyWechatNotificationSignature(bodyText: string, request: Request) {
   verifier.update(message);
   verifier.end();
 
-  return verifier.verify(normalizePem(env.wechatPayPlatformPublicKey), signature, "base64");
+  return verifier.verify(
+    normalizePem(env.wechatPayPlatformPublicKey),
+    signature,
+    "base64",
+  );
 }
 
 function decryptWechatResource(resource: {
@@ -112,7 +119,10 @@ function decryptWechatResource(resource: {
     throw new Error("WECHAT_PAY_RESOURCE_INVALID");
   }
 
-  const apiV3Key = Buffer.from(normalizeMultilineSecret(env.wechatPayApiV3Key), "utf8");
+  const apiV3Key = Buffer.from(
+    normalizeMultilineSecret(env.wechatPayApiV3Key),
+    "utf8",
+  );
   const ciphertext = Buffer.from(resource.ciphertext, "base64");
   const authTag = ciphertext.subarray(ciphertext.length - 16);
   const encrypted = ciphertext.subarray(0, ciphertext.length - 16);
@@ -184,6 +194,17 @@ function getPaymentExpiresAt(minutesFromNow: number) {
   return new Date(Date.now() + minutesFromNow * 60_000);
 }
 
+function resolvePersonalPaymentDescription(channel: CommercePaymentChannelKind) {
+  const providerLabel = channel === "wechat" ? "微信" : "支付宝";
+  const contact = env.personalPaymentContact.trim();
+
+  if (contact) {
+    return `请使用${providerLabel}扫码向个人账户付款。付款后请保留截图，并通过 ${contact} 发送订单号，等待人工确认到账。`;
+  }
+
+  return `请使用${providerLabel}扫码向个人账户付款。付款后请保留截图，并联系站长人工确认到账后开通权益。`;
+}
+
 export class PaymentServiceError extends Error {
   constructor(
     public readonly code:
@@ -212,7 +233,7 @@ class PaymentService {
         qrCodeDataUrl: null,
         displayTitle: "人工开通",
         displayDescription:
-          "当前订单使用人工开通模式，请由运营确认到账后发放权益。",
+          "当前订单使用人工开通模式，请在确认到账后手动发放套餐权益。",
       };
     }
 
@@ -220,15 +241,21 @@ class PaymentService {
       return createUnavailablePaymentSession(input.paymentChannel);
     }
 
-    if (input.paymentChannel === "wechat") {
-      return this.createWechatCheckoutSession(input);
+    if (hasMerchantPaymentConfig(input.paymentChannel)) {
+      if (input.paymentChannel === "wechat") {
+        return this.createWechatCheckoutSession(input);
+      }
+
+      if (input.paymentChannel === "alipay") {
+        return this.createAlipayCheckoutSession(input);
+      }
     }
 
-    if (input.paymentChannel === "alipay") {
-      return this.createAlipayCheckoutSession(input);
+    if (hasPersonalCollectionQr(input.paymentChannel)) {
+      return this.createPersonalCollectionSession(input);
     }
 
-    throw new PaymentServiceError("PAYMENT_CHANNEL_NOT_SUPPORTED", {
+    throw new PaymentServiceError("PAYMENT_PROVIDER_NOT_CONFIGURED", {
       paymentChannel: input.paymentChannel,
     });
   }
@@ -266,7 +293,8 @@ class PaymentService {
 
     if (storedPayload) {
       const expired =
-        order.paymentExpiresAt !== null && order.paymentExpiresAt.getTime() <= Date.now();
+        order.paymentExpiresAt !== null &&
+        order.paymentExpiresAt.getTime() <= Date.now();
 
       return {
         ...storedPayload,
@@ -284,7 +312,7 @@ class PaymentService {
         paymentUrl: null,
         qrCodeDataUrl: null,
         displayTitle: "人工开通",
-        displayDescription: "该订单等待人工确认到账。",
+        displayDescription: "该订单正在等待人工确认到账。",
       };
     }
 
@@ -319,7 +347,8 @@ class PaymentService {
       return currentSession;
     }
 
-    const planLabel = order.planCode === "JD_DIAGNOSE_PACK_29" ? "29元冲刺包" : "免费试用";
+    const planLabel =
+      order.planCode === "JD_DIAGNOSE_PACK_29" ? "29 元冲刺包" : "免费试用";
     const session = await this.createCheckoutSession({
       orderId: order.id,
       amountCents: order.amountCents,
@@ -359,7 +388,11 @@ class PaymentService {
     };
     const resource = decryptWechatResource(payload.resource ?? {});
 
-    if (resource.trade_state !== "SUCCESS" || !resource.out_trade_no || !resource.transaction_id) {
+    if (
+      resource.trade_state !== "SUCCESS" ||
+      !resource.out_trade_no ||
+      !resource.transaction_id
+    ) {
       return {
         handled: false,
         reason: "ignored",
@@ -432,6 +465,24 @@ class PaymentService {
       displayTitle: payload.displayTitle,
       displayDescription: payload.displayDescription,
     } satisfies CommercePaymentSession;
+  }
+
+  private createPersonalCollectionSession(
+    input: PaymentGatewayCheckoutInput,
+  ): CommercePaymentSession {
+    const imageUrl = getPersonalCollectionQrUrl(input.paymentChannel);
+    const providerLabel = input.paymentChannel === "wechat" ? "微信" : "支付宝";
+
+    return {
+      channel: input.paymentChannel,
+      status: "ready",
+      expiresAt: null,
+      codeUrl: null,
+      paymentUrl: imageUrl,
+      qrCodeDataUrl: imageUrl,
+      displayTitle: `${providerLabel}个人收款码`,
+      displayDescription: resolvePersonalPaymentDescription(input.paymentChannel),
+    };
   }
 
   private async createWechatCheckoutSession(

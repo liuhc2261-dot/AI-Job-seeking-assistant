@@ -94,7 +94,7 @@ function buildPlanPerks(plan: CommercePlanSummary) {
   }
 
   if (plan.hasUnlimitedExports) {
-    perks.push("无限版本保存与导出");
+    perks.push("无限版本保存和导出");
   } else if (plan.pdfExportCredits) {
     perks.push(`${plan.pdfExportCredits} 次 PDF 导出`);
   }
@@ -154,21 +154,23 @@ function renderPaymentPanel(session: CommercePaymentSession | null) {
   if (!session) {
     return (
       <div className="rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-6 text-sm leading-6 text-[color:var(--muted)]">
-        当前订单尚未生成支付信息，请刷新页面后重试。
+        当前订单还没有生成支付信息，请刷新页面后重试。
       </div>
     );
   }
 
+  const imageSrc = session.qrCodeDataUrl || session.paymentUrl;
+
   return (
     <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
       <div className="rounded-3xl border border-[color:var(--border)] bg-white p-4">
-        {session.qrCodeDataUrl ? (
+        {imageSrc ? (
           <Image
-            src={session.qrCodeDataUrl}
+            src={imageSrc}
             alt={session.displayTitle}
             width={260}
             height={260}
-            className="mx-auto h-auto w-full rounded-2xl"
+            className="mx-auto h-auto w-full rounded-2xl object-contain"
             unoptimized
           />
         ) : (
@@ -192,11 +194,11 @@ function renderPaymentPanel(session: CommercePaymentSession | null) {
             rel="noreferrer"
             className="inline-flex text-sm font-medium text-[color:var(--accent)] underline-offset-4 hover:underline"
           >
-            打开支付链接
+            单独打开二维码
           </a>
         ) : null}
         {!session.paymentUrl && session.status === "not_configured" ? (
-          <p>请先配置支付环境变量，再重新创建订单。</p>
+          <p>请先配置对应支付方式的环境变量，再重新创建订单。</p>
         ) : null}
       </div>
     </div>
@@ -217,17 +219,22 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
     [overview.orders],
   );
 
+  const pendingOrderChannel = (pendingOrder?.paymentChannel ??
+    selectedChannel) as CommercePaymentChannelKind;
+
   return (
     <div className="space-y-6">
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <SectionCard
           title="当前账号权益"
-          description="这里会实时反映当前套餐、模型和剩余次数。支付成功后刷新即可到账。"
+          description="这里会实时显示当前套餐、默认模型和剩余次数。支付确认后刷新即可到账。"
         >
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4">
               <p className="text-sm text-[color:var(--muted)]">当前套餐</p>
-              <p className="mt-2 text-2xl font-semibold">{overview.profile.planLabel}</p>
+              <p className="mt-2 text-2xl font-semibold">
+                {overview.profile.planLabel}
+              </p>
               <p className="mt-2 text-sm text-[color:var(--muted)]">
                 当前模型：{overview.profile.currentAiModel}
               </p>
@@ -239,9 +246,24 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
             <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4">
               <p className="text-sm text-[color:var(--muted)]">剩余次数</p>
               <div className="mt-3 space-y-2 text-sm text-[color:var(--muted)]">
-                <p>母版生成：{overview.profile.quotas.masterResumeCreditsRemaining} 次</p>
-                <p>JD 定制：{overview.profile.quotas.jdTailorCreditsRemaining} 次</p>
-                <p>简历诊断：{overview.profile.quotas.diagnosisCreditsRemaining} 次</p>
+                <p>
+                  母版生成：{
+                    overview.profile.quotas.masterResumeCreditsRemaining
+                  }{" "}
+                  次
+                </p>
+                <p>
+                  JD 定制：{
+                    overview.profile.quotas.jdTailorCreditsRemaining
+                  }{" "}
+                  次
+                </p>
+                <p>
+                  简历诊断：{
+                    overview.profile.quotas.diagnosisCreditsRemaining
+                  }{" "}
+                  次
+                </p>
                 <p>
                   导出权益：
                   {overview.profile.quotas.hasUnlimitedExports
@@ -267,7 +289,7 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
 
         <SectionCard
           title="支付方式"
-          description="当前先支持桌面端扫码支付。微信和支付宝都走服务端下单、服务端回调验签。"
+          description="当前支持两种收款路径：有商户参数时走正式网关；没有商户参数时展示个人收款码并人工确认。"
         >
           <div className="grid gap-3 sm:grid-cols-3">
             {(Object.entries(paymentChannelLabels) as Array<
@@ -293,8 +315,8 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
                   <p className="font-medium">{label}</p>
                   <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
                     {channel === "manual"
-                      ? "适合内测阶段人工确认到账。"
-                      : "创建订单后会返回扫码二维码，支付成功后自动到账。"}
+                      ? "适合完全人工确认到账后开通。"
+                      : "优先走商户网关；若未配置商户参数，则回退到个人收款码模式。"}
                   </p>
                 </button>
               );
@@ -302,8 +324,10 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
           </div>
 
           <div className="mt-4 rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-4 text-sm leading-6 text-[color:var(--muted)]">
-            <p>免费试用默认走 GPT-5.1，29 元套餐默认走 GPT-5.4。</p>
-            <p>微信支付走 Native 下单，支付宝走预下单扫码，适合你当前桌面端投递场景。</p>
+            <p>免费试用默认使用 GPT-5.1，29 元套餐默认使用 GPT-5.4。</p>
+            <p>
+              你现在可以先用个人微信/支付宝收款码跑通内测收费，到账后手动确认开通套餐。
+            </p>
           </div>
         </SectionCard>
       </section>
@@ -318,7 +342,7 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
             <SectionCard
               key={plan.code}
               title={plan.label}
-              description={`${formatAmount(plan.amountCents)} · ${plan.currentAiModel}`}
+              description={`${formatAmount(plan.amountCents)} / ${plan.currentAiModel}`}
             >
               <div className="space-y-2 text-sm leading-6 text-[color:var(--muted)]">
                 {perks.map((perk) => (
@@ -363,7 +387,7 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
                           setNotice(
                             result.reusedExistingOrder
                               ? "已复用你当前未支付的订单，请继续完成支付。"
-                              : "支付订单已创建，请扫码完成支付。",
+                              : "支付订单已创建，请扫码完成付款。",
                           );
                           router.refresh();
                         } catch (requestError) {
@@ -394,13 +418,15 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <SectionCard
           title="当前待支付订单"
-          description="创建订单后，这里会展示二维码、金额和到账方式。"
+          description="创建订单后，这里会展示金额、二维码和人工确认说明。"
         >
           {pendingOrder ? (
             <div className="space-y-4">
               <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4">
                 <p className="text-sm text-[color:var(--muted)]">订单号</p>
-                <p className="mt-2 break-all font-mono text-sm">{pendingOrder.id}</p>
+                <p className="mt-2 break-all font-mono text-sm">
+                  {pendingOrder.id}
+                </p>
                 <p className="mt-3 text-sm text-[color:var(--muted)]">
                   套餐：
                   {pendingOrder.planCode === "jd_diagnose_pack_29"
@@ -421,9 +447,9 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
               {renderPaymentPanel(pendingOrder.paymentSession)}
 
               <div className="rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-4 text-sm leading-6 text-[color:var(--muted)]">
-                <p>1. 使用对应 App 扫码支付。</p>
-                <p>2. 支付平台会回调服务端通知接口。</p>
-                <p>3. 回调验签通过后，系统自动发放 10 次 JD 定制、10 次诊断和无限导出。</p>
+                <p>1. 用对应 App 扫码，付款金额与订单金额保持一致。</p>
+                <p>2. 付款后保存截图，并记录订单号。</p>
+                <p>3. 你确认到账后，可在后台或脚本里手动确认开通权益。</p>
               </div>
 
               <div className="flex flex-wrap gap-3">
@@ -447,50 +473,55 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
                       startConfirmTransition(async () => {
                         try {
                           await readApiPayload(
-                            await fetch(`/api/commerce/orders/${pendingOrder.id}/confirm`, {
-                              method: "POST",
-                              headers: {
-                                "Content-Type": "application/json",
+                            await fetch(
+                              `/api/commerce/orders/${pendingOrder.id}/confirm`,
+                              {
+                                method: "POST",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({
+                                  paymentChannel: pendingOrderChannel,
+                                  notes: "dev_manual_confirm",
+                                }),
                               },
-                              body: JSON.stringify({
-                                paymentChannel: selectedChannel,
-                                notes: "dev_manual_confirm",
-                              }),
-                            }),
+                            ),
                           );
 
                           captureAnalyticsEvent(telemetryEvents.checkoutPaid, {
                             orderId: pendingOrder.id,
-                            paymentChannel: selectedChannel,
+                            paymentChannel: pendingOrderChannel,
                             source: "mock_confirm",
                           });
-                          setNotice("开发态模拟支付成功，套餐权益已发放。");
+                          setNotice(
+                            "开发环境已模拟确认到账，套餐权益已经发放。",
+                          );
                           router.refresh();
                         } catch (requestError) {
                           setError(
                             requestError instanceof Error
                               ? requestError.message
-                              : "模拟支付确认失败，请稍后重试。",
+                              : "模拟确认到账失败，请稍后重试。",
                           );
                         }
                       });
                     }}
                   >
-                    {isConfirmingOrder ? "确认中..." : "开发态模拟支付成功"}
+                    {isConfirmingOrder ? "确认中..." : "开发态模拟确认到账"}
                   </button>
                 ) : null}
               </div>
             </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-6 text-sm leading-6 text-[color:var(--muted)]">
-              当前没有待支付订单。点击上方套餐按钮后，这里会直接出现扫码支付信息。
+              当前没有待支付订单。点击上方套餐按钮后，这里会直接展示你的收款码或支付二维码。
             </div>
           )}
         </SectionCard>
 
         <SectionCard
           title="订单记录"
-          description="便于运营核对用户当前的订单状态和最近一次支付结果。"
+          description="方便你核对每笔付款对应的订单状态和到账结果。"
         >
           {overview.orders.length > 0 ? (
             <div className="space-y-3">
@@ -526,7 +557,7 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
             </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-6 text-sm leading-6 text-[color:var(--muted)]">
-              还没有订单记录。建议先创建一笔微信或支付宝订单，把整条支付链路跑通。
+              还没有订单记录。建议先创建一笔微信或支付宝订单，把个人收款码模式跑通。
             </div>
           )}
         </SectionCard>
