@@ -28,6 +28,20 @@ function previewText(value, maxLength = 160) {
   return value.length > maxLength ? `${value.slice(0, maxLength)}...` : value;
 }
 
+function resolveOpenAiChatCompletionsUrl(baseUrl) {
+  const normalized = (baseUrl || "https://api.openai.com/v1").trim().replace(/\/+$/, "");
+
+  if (normalized.endsWith("/chat/completions")) {
+    return normalized;
+  }
+
+  if (normalized.endsWith("/v1")) {
+    return `${normalized}/chat/completions`;
+  }
+
+  return `${normalized}/v1/chat/completions`;
+}
+
 async function verifyPdfBrowser() {
   const { access } = await import("node:fs/promises");
   const candidates = [
@@ -156,6 +170,7 @@ function verifyLocalReadiness() {
 
 async function verifyOpenAi() {
   const apiKey = readEnv("OPENAI_API_KEY");
+  const baseUrl = readEnv("OPENAI_BASE_URL", "https://api.openai.com/v1");
   const trialModel = readEnv("OPENAI_TRIAL_MODEL", readEnv("OPENAI_MODEL", "gpt-4.1-mini"));
   const paidModel = readEnv("OPENAI_PAID_MODEL", readEnv("OPENAI_MODEL", "gpt-4.1-mini"));
   const model = paidModel || trialModel;
@@ -168,7 +183,7 @@ async function verifyOpenAi() {
     };
   }
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const response = await fetch(resolveOpenAiChatCompletionsUrl(baseUrl), {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -219,7 +234,7 @@ async function verifyOpenAi() {
     name: "openai",
     status: content ? "ok" : "error",
     detail: content
-      ? `chat completion succeeded with paid model ${model} (trial model: ${trialModel || "n/a"})`
+      ? `chat completion succeeded via ${baseUrl} with paid model ${model} (trial model: ${trialModel || "n/a"})`
       : "empty response content",
     responsePreview: previewText(content || bodyText),
   };

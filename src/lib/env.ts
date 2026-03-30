@@ -11,6 +11,8 @@ export const env = {
   authTrustHost: process.env.AUTH_TRUST_HOST ?? "false",
   appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   openAiApiKey: process.env.OPENAI_API_KEY ?? "",
+  openAiBaseUrl:
+    process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1",
   openAiModel: process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
   openAiTrialModel:
     process.env.OPENAI_TRIAL_MODEL ??
@@ -82,8 +84,8 @@ export function getSystemReadiness(): ReadinessItem[] {
     },
     {
       key: "ai",
-      label: "OpenAI API key",
-      configured: Boolean(env.openAiApiKey),
+      label: "OpenAI-compatible API",
+      configured: Boolean(env.openAiApiKey && env.openAiBaseUrl),
       description:
         "Required to enable real AI generation, JD parsing, optimization, and diagnosis.",
     },

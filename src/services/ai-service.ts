@@ -82,7 +82,7 @@ class AiService {
     userPrompt: string;
     temperature: number;
   }) {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch(this.getChatCompletionsUrl(), {
       method: "POST",
       headers: {
         Authorization: `Bearer ${env.openAiApiKey}`,
@@ -129,6 +129,24 @@ class AiService {
     }
 
     return content;
+  }
+
+  private getChatCompletionsUrl() {
+    const baseUrl = env.openAiBaseUrl.trim().replace(/\/+$/, "");
+
+    if (!baseUrl) {
+      return "https://api.openai.com/v1/chat/completions";
+    }
+
+    if (baseUrl.endsWith("/chat/completions")) {
+      return baseUrl;
+    }
+
+    if (baseUrl.endsWith("/v1")) {
+      return `${baseUrl}/chat/completions`;
+    }
+
+    return `${baseUrl}/v1/chat/completions`;
   }
 
   private async resolveFallback<T>(fallback?: () => Promise<T> | T) {
