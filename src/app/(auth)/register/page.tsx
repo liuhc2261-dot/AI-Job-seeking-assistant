@@ -15,16 +15,17 @@ export default async function RegisterPage() {
   return (
     <div className="pb-12">
       <SiteHeader authenticated={false} />
-      <main className="mx-auto grid w-full max-w-6xl gap-6 px-6 pt-8 lg:grid-cols-[1fr_440px] lg:px-8">
+      <main className="mx-auto grid w-full max-w-6xl gap-6 px-4 pt-8 sm:px-6 lg:grid-cols-[1fr_440px] lg:px-8">
         <SectionCard
           eyebrow="注册"
-          title="用一个账号串起你的简历资产"
-          description="注册成功后会自动创建 `users` 与 `user_profiles` 的最小记录，为里程碑 2 的资料建档和简历资产沉淀打底。"
+          title="先创建一个账号，再把简历资料和版本长期沉淀下来"
+          description="注册后的体验重点应该是尽快开始建档，而不是先接受一堆技术说明。这个页面会把重点放在“注册后你能做什么”上。"
+          tone="accent"
         >
-          <div className="grid gap-3 text-sm leading-6 text-[color:var(--muted)]">
-            <p>当前只开放邮箱注册，符合 PRD 中“邮箱优先”的 MVP 约束。</p>
-            <p>密码会使用哈希存储，不在日志和普通响应中暴露敏感信息。</p>
-            <p>后续可在不破坏现有结构的前提下继续扩展邮箱验证与找回密码。</p>
+          <div className="space-y-3 text-sm leading-6 text-[color:var(--muted)]">
+            <p>注册成功后会自动进入工作台，建议先完成资料建档，再生成第一份母版简历。</p>
+            <p>后续的 JD 定制、诊断、版本管理和导出都会继续围绕这个账号里的简历资产展开。</p>
+            <p>如果你已经有账号，可以直接登录继续当前进度。</p>
           </div>
         </SectionCard>
 

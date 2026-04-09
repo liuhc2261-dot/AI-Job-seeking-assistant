@@ -8,13 +8,11 @@ import { ResumePreview } from "@/features/resume/components/resume-preview";
 import { ResumeVersionTimeline } from "@/features/resume/components/resume-version-timeline";
 import { resumeService } from "@/services/resume-service";
 
-type ResumePageProps = {
-  params: Promise<{
-    resumeId: string;
-  }>;
-};
-
-export default async function ResumeDetailPage({ params }: ResumePageProps) {
+export default async function ResumeDetailPage({
+  params,
+}: {
+  params: Promise<{ resumeId: string }>;
+}) {
   const session = await getAuthSession();
 
   if (!session?.user?.id) {
@@ -23,37 +21,91 @@ export default async function ResumeDetailPage({ params }: ResumePageProps) {
 
   const { resumeId } = await params;
   const workspace = await resumeService.getResumeWorkspace(session.user.id, resumeId);
+  const currentVersion = workspace.currentVersion;
 
   return (
     <div className="space-y-6">
       <PageIntro
         eyebrow="Resume Detail"
         title={workspace.resume.name}
-        description="这里展示当前版本预览、版本说明和沉淀情况。后续 JD 优化、简历诊断和导出都继续围绕这个版本化资产容器展开。"
+        description="简历详情页现在更强调“当前版本、下一步操作和版本来源关系”，避免用户点进来后只能看到一份预览，却不知道接下来应该编辑、定制、诊断还是导出。"
+        actions={
+          <>
+            <Link
+              href={`/resumes/${workspace.resume.id}/edit`}
+              className="rounded-full bg-[linear-gradient(135deg,var(--accent),var(--accent-strong))] px-5 py-3 text-sm font-semibold text-white transition hover:shadow-[0_18px_34px_-18px_rgba(15,106,111,0.7)]"
+            >
+              编辑当前版本
+            </Link>
+            <Link
+              href={`/resumes/${workspace.resume.id}/versions`}
+              className="rounded-full border border-[color:var(--border-strong)] px-5 py-3 text-sm font-semibold text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+            >
+              管理版本链
+            </Link>
+          </>
+        }
+        meta={
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-3xl border border-[color:var(--border)] bg-white/72 px-4 py-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
+                当前版本
+              </p>
+              <p className="mt-3 text-lg font-semibold text-[color:var(--foreground)]">
+                {currentVersion?.versionName ?? "暂无"}
+              </p>
+            </div>
+            <div className="rounded-3xl border border-[color:var(--border)] bg-white/72 px-4 py-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
+                版本数量
+              </p>
+              <p className="mt-3 text-2xl font-semibold text-[color:var(--foreground)]">
+                {workspace.versions.length}
+              </p>
+            </div>
+            <div className="rounded-3xl border border-[color:var(--border)] bg-white/72 px-4 py-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
+                当前状态
+              </p>
+              <p className="mt-3 text-lg font-semibold text-[color:var(--foreground)]">
+                {workspace.resume.status === "active" ? "进行中" : "草稿"}
+              </p>
+            </div>
+            <div className="rounded-3xl border border-[color:var(--border)] bg-white/72 px-4 py-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
+                下一步
+              </p>
+              <p className="mt-3 text-lg font-semibold text-[color:var(--foreground)]">
+                {currentVersion ? "定制 / 诊断 / 导出" : "先生成版本"}
+              </p>
+            </div>
+          </div>
+        }
       />
 
-      <section className="grid gap-6 xl:grid-cols-[0.88fr_1.12fr]">
+      <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="space-y-6">
           <SectionCard
-            title="当前版本"
-            description="编辑、岗位优化和诊断应用都只会新增版本，不会直接覆盖当前内容。"
+            title="当前版本说明"
+            description="编辑、JD 优化和诊断应用都会新建版本，不会直接覆盖当前版本。"
+            tone="accent"
           >
-            {workspace.currentVersion ? (
+            {currentVersion ? (
               <div className="space-y-4">
-                <div className="rounded-2xl bg-[color:var(--accent-soft)] px-4 py-4">
-                  <p className="text-sm font-semibold">
-                    {workspace.currentVersion.versionName}
+                <div className="rounded-2xl border border-[color:var(--border-strong)] bg-white/76 px-4 py-4">
+                  <p className="font-semibold text-[color:var(--foreground)]">
+                    {currentVersion.versionName}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
-                    {workspace.currentVersion.changeSummary?.generationSummary ??
-                      "当前版本还没有补充说明。"}
+                    {currentVersion.changeSummary?.generationSummary ??
+                      "当前版本还没有额外摘要说明。"}
                   </p>
                 </div>
 
-                {workspace.currentVersion.changeSummary?.warnings &&
-                workspace.currentVersion.changeSummary.warnings.length > 0 ? (
+                {currentVersion.changeSummary?.warnings &&
+                currentVersion.changeSummary.warnings.length > 0 ? (
                   <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-800">
-                    {workspace.currentVersion.changeSummary.warnings.map((warning) => (
+                    {currentVersion.changeSummary.warnings.map((warning) => (
                       <p key={warning}>- {warning}</p>
                     ))}
                   </div>
@@ -62,33 +114,21 @@ export default async function ResumeDetailPage({ params }: ResumePageProps) {
                 <div className="flex flex-wrap gap-3">
                   <Link
                     href={`/resumes/${workspace.resume.id}/optimize`}
-                    className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                    className="rounded-full border border-[color:var(--border-strong)] px-4 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
                   >
-                    JD 定制优化
+                    做 JD 定制
                   </Link>
                   <Link
                     href={`/resumes/${workspace.resume.id}/diagnose`}
-                    className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                    className="rounded-full border border-[color:var(--border-strong)] px-4 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
                   >
-                    简历诊断
-                  </Link>
-                  <Link
-                    href={`/resumes/${workspace.resume.id}/edit`}
-                    className="inline-flex rounded-full bg-[color:var(--accent)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[color:var(--accent-strong)]"
-                  >
-                    打开编辑页
-                  </Link>
-                  <Link
-                    href={`/resumes/${workspace.resume.id}/versions`}
-                    className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
-                  >
-                    查看版本差异
+                    运行诊断
                   </Link>
                   <Link
                     href={`/resumes/${workspace.resume.id}/export`}
-                    className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                    className="rounded-full border border-[color:var(--border-strong)] px-4 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
                   >
-                    导出与交付
+                    导出投递版
                   </Link>
                 </div>
               </div>
@@ -101,7 +141,7 @@ export default async function ResumeDetailPage({ params }: ResumePageProps) {
 
           <SectionCard
             title="版本时间线"
-            description="母版生成、手动保存、岗位优化和诊断应用都会沿着同一条版本链沉淀。"
+            description="把母版、手动编辑、岗位优化和诊断应用放进同一条时间线，方便理解当前版本是怎么来的。"
           >
             <ResumeVersionTimeline
               versions={workspace.versions}
@@ -111,12 +151,12 @@ export default async function ResumeDetailPage({ params }: ResumePageProps) {
         </div>
 
         <div>
-          {workspace.currentVersion ? (
-            <ResumePreview content={workspace.currentVersion.contentJson} />
+          {currentVersion ? (
+            <ResumePreview content={currentVersion.contentJson} />
           ) : (
             <SectionCard title="暂无预览">
               <p className="text-sm text-[color:var(--muted)]">
-                当前没有可用版本，请返回简历中心重新生成母版简历。
+                当前没有可用版本，请先回到简历中心重新生成母版简历。
               </p>
             </SectionCard>
           )}

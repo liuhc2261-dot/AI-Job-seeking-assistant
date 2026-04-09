@@ -18,6 +18,23 @@ function SectionTitle({ title }: { title: string }) {
   );
 }
 
+function BulletList({ items }: { items: string[] }) {
+  if (items.length === 0) {
+    return null;
+  }
+
+  return (
+    <ul className="space-y-1.5">
+      {items.map((item) => (
+        <li key={item} className="flex gap-2">
+          <span className="mt-[7px] h-1.5 w-1.5 rounded-full bg-[color:var(--accent)]" />
+          <span className="flex-1">{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function ResumePreview({ content }: ResumePreviewProps) {
   const contactItems = [
     content.basic.phone,
@@ -32,7 +49,7 @@ export function ResumePreview({ content }: ResumePreviewProps) {
       <header className="border-b border-[color:var(--border)] pb-5">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-semibold tracking-tight">
+            <h2 className="text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
               {content.basic.name || "未命名简历"}
             </h2>
             {content.basic.targetRole ? (
@@ -74,13 +91,7 @@ export function ResumePreview({ content }: ResumePreviewProps) {
                       {renderRange(education.startDate, education.endDate)}
                     </p>
                   </div>
-                  {education.highlights.length > 0 ? (
-                    <ul className="space-y-1">
-                      {education.highlights.map((highlight) => (
-                        <li key={highlight}>• {highlight}</li>
-                      ))}
-                    </ul>
-                  ) : null}
+                  <BulletList items={education.highlights} />
                 </div>
               ))}
             </div>
@@ -107,13 +118,7 @@ export function ResumePreview({ content }: ResumePreviewProps) {
                       技术栈：{project.techStack.join(" / ")}
                     </p>
                   ) : null}
-                  {project.bullets.length > 0 ? (
-                    <ul className="space-y-1">
-                      {project.bullets.map((bullet) => (
-                        <li key={bullet}>• {bullet}</li>
-                      ))}
-                    </ul>
-                  ) : null}
+                  <BulletList items={project.bullets} />
                 </div>
               ))}
             </div>
@@ -135,13 +140,7 @@ export function ResumePreview({ content }: ResumePreviewProps) {
                       {renderRange(experience.startDate, experience.endDate)}
                     </p>
                   </div>
-                  {experience.bullets.length > 0 ? (
-                    <ul className="space-y-1">
-                      {experience.bullets.map((bullet) => (
-                        <li key={bullet}>• {bullet}</li>
-                      ))}
-                    </ul>
-                  ) : null}
+                  <BulletList items={experience.bullets} />
                 </div>
               ))}
             </div>

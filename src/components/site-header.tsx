@@ -8,57 +8,60 @@ type SiteHeaderProps = {
 
 export function SiteHeader({ authenticated }: SiteHeaderProps) {
   return (
-    <header className="mx-auto flex w-full max-w-7xl items-center justify-between gap-6 px-6 py-6 lg:px-8">
-      <Link href="/" className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[color:var(--accent)] text-sm font-semibold text-white shadow-lg shadow-[rgba(21,94,99,0.24)]">
-          AI
-        </div>
-        <div>
-          <p className="text-sm font-semibold">AI 求职简历助手</p>
-          <p className="text-xs text-[color:var(--muted)]">
-            建档 → 生成 → 定制 → 诊断 → 导出
-          </p>
-        </div>
-      </Link>
+    <header className="sticky top-0 z-40 px-4 py-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 rounded-full border border-[color:var(--border-strong)] bg-[rgba(255,252,247,0.88)] px-4 py-3 shadow-[0_20px_60px_-42px_rgba(24,35,32,0.28)] backdrop-blur-xl sm:px-5">
+        <Link href="/" className="flex min-w-0 items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,var(--accent),var(--accent-strong))] text-sm font-semibold text-white shadow-lg shadow-[rgba(15,106,111,0.26)]">
+            AI
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-[color:var(--foreground)]">
+              AI 求职简历助手
+            </p>
+            <p className="truncate text-xs text-[color:var(--muted)]">
+              建档 → 生成 → 定制 → 诊断 → 导出
+            </p>
+          </div>
+        </Link>
 
-      <nav className="hidden items-center gap-5 text-sm text-[color:var(--muted)] md:flex">
-        {publicNav.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="transition hover:text-[color:var(--foreground)]"
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
+        <nav className="hidden items-center gap-2 md:flex">
+          {publicNav.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="rounded-full px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:bg-[color:var(--surface-muted)] hover:text-[color:var(--foreground)]"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
 
-      <div className="flex items-center gap-3">
-        {authenticated ? (
-          <Link
-            href="/dashboard"
-            className="rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
-          >
-            进入工作台
-          </Link>
-        ) : (
-          <>
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          {authenticated ? (
             <Link
-              href="/login"
-              className="rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+              href="/dashboard"
+              className="rounded-full border border-[color:var(--border-strong)] px-4 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
             >
-              登录
+              打开工作台
             </Link>
-            <Link
-              href="/register"
-              className="rounded-full bg-[color:var(--accent)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[color:var(--accent-strong)]"
-            >
-              立即开始
-            </Link>
-          </>
-        )}
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="rounded-full border border-[color:var(--border-strong)] px-4 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+              >
+                登录
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-full bg-[linear-gradient(135deg,var(--accent),var(--accent-strong))] px-4 py-2 text-sm font-medium text-white transition hover:shadow-[0_16px_34px_-18px_rgba(15,106,111,0.8)]"
+              >
+                立即开始
+              </Link>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );
 }
-

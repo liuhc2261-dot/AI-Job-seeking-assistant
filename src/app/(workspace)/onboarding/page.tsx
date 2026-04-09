@@ -23,14 +23,50 @@ export default async function OnboardingPage() {
     <div className="space-y-6">
       <PageIntro
         eyebrow="Onboarding"
-        title="用最少步骤把资料沉淀成可用资产"
-        description={`当前已完成 ${snapshot.completion.requiredCompleted} / ${snapshot.completion.requiredTotal} 个必填模块。先把真实资料补齐，再进入后续母版简历生成会更稳。`}
+        title="先看清主流程和资料准备项，再开始填写会更顺"
+        description={`当前必填模块已完成 ${snapshot.completion.requiredCompleted} / ${snapshot.completion.requiredTotal}。这页会先告诉用户需要准备什么、哪些是必填、哪些是可选，降低一上来就面对大量表单的压迫感。`}
+        actions={
+          <Link
+            href="/profile"
+            className="rounded-full bg-[linear-gradient(135deg,var(--accent),var(--accent-strong))] px-5 py-3 text-sm font-semibold text-white transition hover:shadow-[0_18px_34px_-18px_rgba(15,106,111,0.7)]"
+          >
+            继续完善资料建档
+          </Link>
+        }
+        meta={
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-3xl border border-[color:var(--border)] bg-white/72 px-4 py-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
+                必填模块
+              </p>
+              <p className="mt-3 text-2xl font-semibold text-[color:var(--foreground)]">
+                {snapshot.completion.requiredTotal}
+              </p>
+            </div>
+            <div className="rounded-3xl border border-[color:var(--border)] bg-white/72 px-4 py-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
+                已完成
+              </p>
+              <p className="mt-3 text-2xl font-semibold text-[color:var(--foreground)]">
+                {snapshot.completion.requiredCompleted}
+              </p>
+            </div>
+            <div className="rounded-3xl border border-[color:var(--border)] bg-white/72 px-4 py-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
+                可选模块
+              </p>
+              <p className="mt-3 text-2xl font-semibold text-[color:var(--foreground)]">
+                {optionalModules.length}
+              </p>
+            </div>
+          </div>
+        }
       />
 
       <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <SectionCard
           title="当前必填状态"
-          description="里程碑 2 已经把基础建档接到数据库，下面会直接反映你当前账号的真实完成度。"
+          description="先把建档拆成清晰模块，再告诉用户是否已经满足生成母版的最低条件。"
         >
           <div className="space-y-3">
             {modules.map((item) => {
@@ -39,10 +75,10 @@ export default async function OnboardingPage() {
               return (
                 <div
                   key={item.slug}
-                  className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-3"
+                  className="rounded-2xl border border-[color:var(--border)] bg-white/76 px-4 py-3"
                 >
                   <div className="flex items-center justify-between gap-4">
-                    <p className="font-medium">{item.title}</p>
+                    <p className="font-medium text-[color:var(--foreground)]">{item.title}</p>
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-semibold ${
                         completed
@@ -65,15 +101,15 @@ export default async function OnboardingPage() {
         </SectionCard>
 
         <SectionCard
-          title="建议准备的资料"
-          description="先把原始事实准备完整，再交给 AI 做表达优化，而不是反过来让模型帮你补事实。"
+          title="开始前建议先准备这些信息"
+          description="引导用户先准备事实，再交给 AI 做表达优化，比直接让模型“猜”经历更可靠。"
+          tone="subtle"
         >
           <div className="space-y-3 text-sm leading-6 text-[color:var(--muted)]">
-            <p>教育经历至少准备 1 条完整时间线。</p>
-            <p>项目经历优先准备职责、成果、技术栈和你自己的实际贡献。</p>
-            <p>如果你有实习或校内岗位经历，建议单独建档，后续生成会更自然。</p>
-            <p>奖项、证书和竞赛经历可以先存档，后续由不同版本决定是否展示。</p>
-            <p>技能尽量用标准标签表达，方便后续做 JD 关键词对齐。</p>
+            <p>教育经历至少准备 1 条完整时间线，包含学校、专业、学历和起止时间。</p>
+            <p>项目经历尽量写清职责、成果、技术栈和你的真实贡献，后续生成质量会更稳。</p>
+            <p>如果有实习、社团或校内岗位经历，建议单独建档，后面做岗位版时更容易被调用。</p>
+            <p>技能请优先使用标准标签表达，便于后面做 JD 关键词对齐。</p>
           </div>
         </SectionCard>
       </section>
@@ -81,51 +117,40 @@ export default async function OnboardingPage() {
       <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <SectionCard
           title="已沉淀的资料量"
-          description="这些数字来自当前账号的真实建档数据。"
+          description="把资料规模可视化后，用户更容易知道自己的简历生成基础是不是足够。"
         >
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            <div className="rounded-2xl bg-[color:var(--accent-soft)] px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                Education
-              </p>
-              <p className="mt-3 text-2xl font-semibold">{snapshot.counts.educations}</p>
-            </div>
-            <div className="rounded-2xl bg-[color:var(--accent-soft)] px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                Project
-              </p>
-              <p className="mt-3 text-2xl font-semibold">{snapshot.counts.projects}</p>
-            </div>
-            <div className="rounded-2xl bg-[color:var(--accent-soft)] px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                Experience
-              </p>
-              <p className="mt-3 text-2xl font-semibold">{snapshot.counts.experiences}</p>
-            </div>
-            <div className="rounded-2xl bg-[color:var(--accent-soft)] px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                Award
-              </p>
-              <p className="mt-3 text-2xl font-semibold">{snapshot.counts.awards}</p>
-            </div>
-            <div className="rounded-2xl bg-[color:var(--accent-soft)] px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                Skill
-              </p>
-              <p className="mt-3 text-2xl font-semibold">{snapshot.counts.skills}</p>
-            </div>
+            {[
+              { label: "Education", value: snapshot.counts.educations },
+              { label: "Project", value: snapshot.counts.projects },
+              { label: "Experience", value: snapshot.counts.experiences },
+              { label: "Award", value: snapshot.counts.awards },
+              { label: "Skill", value: snapshot.counts.skills },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="rounded-2xl border border-[color:var(--border)] bg-white/76 px-4 py-4"
+              >
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
+                  {item.label}
+                </p>
+                <p className="mt-3 text-2xl font-semibold text-[color:var(--foreground)]">
+                  {item.value}
+                </p>
+              </div>
+            ))}
           </div>
         </SectionCard>
 
         <SectionCard
-          title="当前可选补充模块"
-          description="这些模块不会阻塞母版生成，但补进去后会让后续 AI 输出更完整。"
+          title="当前开放的可选模块"
+          description="这些模块不会阻止母版生成，但补进去以后会让后续岗位优化和诊断更完整。"
         >
           <div className="flex flex-wrap gap-2">
             {optionalModules.map((item) => (
               <span
                 key={item.slug}
-                className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-3 py-1 text-sm text-[color:var(--muted)]"
+                className="rounded-full border border-[color:var(--border)] bg-white/76 px-3 py-2 text-sm font-medium text-[color:var(--muted)]"
               >
                 {item.title}
               </span>
@@ -133,13 +158,6 @@ export default async function OnboardingPage() {
           </div>
         </SectionCard>
       </section>
-
-      <Link
-        href="/profile"
-        className="inline-flex rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
-      >
-        继续完善资料建档
-      </Link>
     </div>
   );
 }

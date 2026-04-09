@@ -1,6 +1,7 @@
 "use client";
 
-import { useDeferredValue, useState, useTransition } from "react";
+import type { ReactNode } from "react";
+import { useDeferredValue, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { SectionCard } from "@/components/section-card";
@@ -13,12 +14,12 @@ import {
   formatResumeDate,
 } from "@/lib/resume-document";
 import { cn } from "@/lib/utils";
+import { ResumePreview } from "@/features/resume/components/resume-preview";
 import type {
   ResumeContentJson,
   ResumeVersionRecord,
   ResumeWorkspace,
 } from "@/types/resume";
-import { ResumePreview } from "@/features/resume/components/resume-preview";
 
 type ResumeEditorProps = {
   resumeId: string;
@@ -43,6 +44,18 @@ type ResumeWorkspaceResponse =
         message: string;
       };
     };
+
+const inputClassName =
+  "w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent-soft-strong)]";
+
+const textareaClassName =
+  "w-full rounded-3xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent-soft-strong)]";
+
+const secondaryButtonClassName =
+  "inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]";
+
+const removeButtonClassName =
+  "text-sm font-medium text-rose-600 transition hover:text-rose-700";
 
 function replaceAtIndex<T>(items: T[], index: number, nextValue: T) {
   return items.map((item, itemIndex) => (itemIndex === index ? nextValue : item));
@@ -70,6 +83,30 @@ function splitTags(value: string) {
     .filter(Boolean);
 }
 
+function StatCard({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-[color:var(--border)] bg-white/80 px-4 py-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+        {label}
+      </p>
+      <p className="mt-3 text-2xl font-semibold text-[color:var(--foreground)]">{value}</p>
+      <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">{hint}</p>
+    </div>
+  );
+}
+
+function FieldLabel({ children }: { children: ReactNode }) {
+  return <span className="text-sm font-medium text-slate-800">{children}</span>;
+}
+
 export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
   const router = useRouter();
   const [currentVersion, setCurrentVersion] = useState(initialVersion);
@@ -77,6 +114,32 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
   const deferredDraft = useDeferredValue(draft);
   const [notice, setNotice] = useState<EditorNotice>(null);
   const [isPending, startTransition] = useTransition();
+
+  const contentStats = useMemo(
+    () => [
+      {
+        label: "教育",
+        value: `${draft.education.length}`,
+        hint: "学校、专业、时间和亮点建议保持完整。",
+      },
+      {
+        label: "项目",
+        value: `${draft.projects.length}`,
+        hint: "优先保留最能证明岗位能力的项目。",
+      },
+      {
+        label: "实习",
+        value: `${draft.experiences.length}`,
+        hint: "没有实习也可以用校园职责或社团项目补足。",
+      },
+      {
+        label: "技能组",
+        value: `${draft.skills.length}`,
+        hint: "按语言、工具、框架分组会更好读。",
+      },
+    ],
+    [draft.education.length, draft.experiences.length, draft.projects.length, draft.skills.length],
+  );
 
   function saveDraft() {
     startTransition(() => {
@@ -112,7 +175,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
           setDraft(payload.data.currentVersion.contentJson);
           setNotice({
             type: "success",
-            message: "已保存为新的手动版本，母版历史没有被覆盖。",
+            message: "已保存为新的手动版本，原有版本链保持不变。",
           });
           router.refresh();
         } catch {
@@ -126,7 +189,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
+    <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
       <div className="space-y-6">
         {notice ? (
           <div
@@ -142,13 +205,26 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
         ) : null}
 
         <SectionCard
-          title="编辑说明"
-          description="这里保存时不会直接覆盖当前版本，而是新增一个 manual 版本，便于后续回滚和对比。"
+          tone="accent"
+          eyebrow="Editor"
+          title="编辑工作台"
+          description="左侧维护结构化内容，右侧实时查看简历排版。每次保存都会另存为新的 manual 版本，方便随时回退和比较。"
         >
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="space-y-1 text-sm text-[color:var(--muted)]">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {contentStats.map((item) => (
+              <StatCard
+                key={item.label}
+                label={item.label}
+                value={item.value}
+                hint={item.hint}
+              />
+            ))}
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[color:var(--border)] bg-white/70 px-4 py-4">
+            <div className="space-y-1 text-sm leading-6 text-[color:var(--muted)]">
               <p>当前编辑源版本：{currentVersion.versionName}</p>
-              <p>生成时间：{formatResumeDate(currentVersion.createdAt)}</p>
+              <p>最近更新时间：{formatResumeDate(currentVersion.updatedAt)}</p>
             </div>
             <button
               type="button"
@@ -156,15 +232,18 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
               disabled={isPending}
               className="inline-flex rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isPending ? "保存中..." : "保存为新版本"}
+              {isPending ? "正在保存..." : "保存为新版本"}
             </button>
           </div>
         </SectionCard>
 
-        <SectionCard title="基本信息" description="建议先确认姓名、联系方式和目标岗位。">
+        <SectionCard
+          title="基础信息"
+          description="先把姓名、联系方式和目标岗位填完整，再去打磨项目与经历。"
+        >
           <div className="grid gap-4 md:grid-cols-2">
             <label className="space-y-2">
-              <span className="text-sm font-medium">姓名</span>
+              <FieldLabel>姓名</FieldLabel>
               <input
                 value={draft.basic.name}
                 onChange={(event) =>
@@ -176,11 +255,11 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                     },
                   }))
                 }
-                className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                className={inputClassName}
               />
             </label>
             <label className="space-y-2">
-              <span className="text-sm font-medium">目标岗位</span>
+              <FieldLabel>目标岗位</FieldLabel>
               <input
                 value={draft.basic.targetRole ?? ""}
                 onChange={(event) =>
@@ -192,11 +271,11 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                     },
                   }))
                 }
-                className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                className={inputClassName}
               />
             </label>
             <label className="space-y-2">
-              <span className="text-sm font-medium">电话</span>
+              <FieldLabel>手机号</FieldLabel>
               <input
                 value={draft.basic.phone}
                 onChange={(event) =>
@@ -208,11 +287,11 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                     },
                   }))
                 }
-                className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                className={inputClassName}
               />
             </label>
             <label className="space-y-2">
-              <span className="text-sm font-medium">邮箱</span>
+              <FieldLabel>邮箱</FieldLabel>
               <input
                 value={draft.basic.email}
                 onChange={(event) =>
@@ -224,11 +303,11 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                     },
                   }))
                 }
-                className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                className={inputClassName}
               />
             </label>
             <label className="space-y-2">
-              <span className="text-sm font-medium">城市</span>
+              <FieldLabel>城市</FieldLabel>
               <input
                 value={draft.basic.city ?? ""}
                 onChange={(event) =>
@@ -240,11 +319,11 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                     },
                   }))
                 }
-                className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                className={inputClassName}
               />
             </label>
             <label className="space-y-2">
-              <span className="text-sm font-medium">个人主页</span>
+              <FieldLabel>个人主页</FieldLabel>
               <input
                 value={draft.basic.homepageUrl ?? ""}
                 onChange={(event) =>
@@ -256,13 +335,29 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                     },
                   }))
                 }
-                className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                className={inputClassName}
+              />
+            </label>
+            <label className="space-y-2 md:col-span-2">
+              <FieldLabel>GitHub / 作品集链接</FieldLabel>
+              <input
+                value={draft.basic.githubUrl ?? ""}
+                onChange={(event) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    basic: {
+                      ...prev.basic,
+                      githubUrl: event.target.value,
+                    },
+                  }))
+                }
+                className={inputClassName}
               />
             </label>
           </div>
 
           <label className="mt-4 block space-y-2">
-            <span className="text-sm font-medium">个人简介</span>
+            <FieldLabel>个人简介</FieldLabel>
             <textarea
               value={draft.summary}
               onChange={(event) =>
@@ -272,12 +367,16 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                 }))
               }
               rows={5}
-              className="w-full rounded-3xl border border-[color:var(--border)] bg-white px-4 py-3"
+              className={textareaClassName}
+              placeholder="用 2-4 句概括你的方向、能力与最有代表性的经历。"
             />
           </label>
         </SectionCard>
 
-        <SectionCard title="教育经历">
+        <SectionCard
+          title="教育经历"
+          description="建议每段都写清学校、专业、时间范围，并补 1-3 条亮点。"
+        >
           <div className="space-y-4">
             {draft.education.map((education, index) => (
               <div
@@ -297,7 +396,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                       }))
                     }
                     placeholder="学校"
-                    className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                    className={inputClassName}
                   />
                   <input
                     value={education.major}
@@ -311,7 +410,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                       }))
                     }
                     placeholder="专业"
-                    className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                    className={inputClassName}
                   />
                   <input
                     value={education.degree}
@@ -325,7 +424,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                       }))
                     }
                     placeholder="学历"
-                    className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                    className={inputClassName}
                   />
                   <div className="grid grid-cols-2 gap-3">
                     <input
@@ -340,7 +439,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                         }))
                       }
                       placeholder="开始时间"
-                      className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                      className={inputClassName}
                     />
                     <input
                       value={education.endDate}
@@ -354,7 +453,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                         }))
                       }
                       placeholder="结束时间"
-                      className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                      className={inputClassName}
                     />
                   </div>
                 </div>
@@ -371,8 +470,8 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                       }),
                     }))
                   }
-                  placeholder="补充亮点，每行一条"
-                  className="mt-4 w-full rounded-3xl border border-[color:var(--border)] bg-white px-4 py-3"
+                  placeholder="教育亮点，每行一条"
+                  className={`mt-4 ${textareaClassName}`}
                 />
 
                 <button
@@ -383,7 +482,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                       education: removeAtIndex(prev.education, index),
                     }))
                   }
-                  className="mt-4 text-sm font-medium text-rose-600"
+                  className={`mt-4 ${removeButtonClassName}`}
                 >
                   删除这段教育经历
                 </button>
@@ -397,14 +496,17 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                   education: [...prev.education, createEducationItem()],
                 }))
               }
-              className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)]"
+              className={secondaryButtonClassName}
             >
               新增教育经历
             </button>
           </div>
         </SectionCard>
 
-        <SectionCard title="项目经历">
+        <SectionCard
+          title="项目经历"
+          description="优先写清你的角色、技术栈和结果导向的贡献。"
+        >
           <div className="space-y-4">
             {draft.projects.map((project, index) => (
               <div
@@ -424,7 +526,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                       }))
                     }
                     placeholder="项目名称"
-                    className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                    className={inputClassName}
                   />
                   <input
                     value={project.role}
@@ -438,7 +540,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                       }))
                     }
                     placeholder="角色"
-                    className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                    className={inputClassName}
                   />
                   <input
                     value={project.startDate}
@@ -452,7 +554,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                       }))
                     }
                     placeholder="开始时间"
-                    className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                    className={inputClassName}
                   />
                   <input
                     value={project.endDate}
@@ -466,7 +568,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                       }))
                     }
                     placeholder="结束时间"
-                    className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                    className={inputClassName}
                   />
                 </div>
 
@@ -481,8 +583,8 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                       }),
                     }))
                   }
-                  placeholder="技术栈，用逗号分隔"
-                  className="mt-4 w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                  placeholder="技术栈，用顿号、逗号或斜杠分隔"
+                  className={`mt-4 ${inputClassName}`}
                 />
 
                 <textarea
@@ -498,7 +600,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                     }))
                   }
                   placeholder="项目要点，每行一条"
-                  className="mt-4 w-full rounded-3xl border border-[color:var(--border)] bg-white px-4 py-3"
+                  className={`mt-4 ${textareaClassName}`}
                 />
 
                 <button
@@ -509,7 +611,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                       projects: removeAtIndex(prev.projects, index),
                     }))
                   }
-                  className="mt-4 text-sm font-medium text-rose-600"
+                  className={`mt-4 ${removeButtonClassName}`}
                 >
                   删除这段项目经历
                 </button>
@@ -523,14 +625,17 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                   projects: [...prev.projects, createProjectItem()],
                 }))
               }
-              className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)]"
+              className={secondaryButtonClassName}
             >
               新增项目经历
             </button>
           </div>
         </SectionCard>
 
-        <SectionCard title="技能清单">
+        <SectionCard
+          title="技能清单"
+          description="建议按语言、框架、工具、设计或数据分析等类别分组。"
+        >
           <div className="space-y-4">
             {draft.skills.map((group, index) => (
               <div
@@ -549,7 +654,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                     }))
                   }
                   placeholder="技能分类"
-                  className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                  className={inputClassName}
                 />
                 <input
                   value={group.items.join("、")}
@@ -562,8 +667,8 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                       }),
                     }))
                   }
-                  placeholder="技能项，用逗号分隔"
-                  className="mt-4 w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                  placeholder="技能项，用顿号、逗号或斜杠分隔"
+                  className={`mt-4 ${inputClassName}`}
                 />
                 <button
                   type="button"
@@ -573,9 +678,9 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                       skills: removeAtIndex(prev.skills, index),
                     }))
                   }
-                  className="mt-4 text-sm font-medium text-rose-600"
+                  className={`mt-4 ${removeButtonClassName}`}
                 >
-                  删除这组技能
+                  删除这一组技能
                 </button>
               </div>
             ))}
@@ -587,18 +692,21 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                   skills: [...prev.skills, createSkillGroup()],
                 }))
               }
-              className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)]"
+              className={secondaryButtonClassName}
             >
               新增技能分组
             </button>
           </div>
         </SectionCard>
 
-        <SectionCard title="可选模块">
+        <SectionCard
+          title="补充模块"
+          description="这里适合补充实习经历、奖项证书等可选内容，让版本更完整。"
+        >
           <div className="grid gap-6">
             <div>
               <div className="mb-3 flex items-center justify-between gap-4">
-                <h3 className="font-medium">实习经历</h3>
+                <h3 className="font-medium text-slate-900">实习经历</h3>
                 <button
                   type="button"
                   onClick={() =>
@@ -631,7 +739,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                           }))
                         }
                         placeholder="公司名称"
-                        className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                        className={inputClassName}
                       />
                       <input
                         value={experience.role}
@@ -645,7 +753,35 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                           }))
                         }
                         placeholder="岗位名称"
-                        className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                        className={inputClassName}
+                      />
+                      <input
+                        value={experience.startDate}
+                        onChange={(event) =>
+                          setDraft((prev) => ({
+                            ...prev,
+                            experiences: replaceAtIndex(prev.experiences, index, {
+                              ...experience,
+                              startDate: event.target.value,
+                            }),
+                          }))
+                        }
+                        placeholder="开始时间"
+                        className={inputClassName}
+                      />
+                      <input
+                        value={experience.endDate}
+                        onChange={(event) =>
+                          setDraft((prev) => ({
+                            ...prev,
+                            experiences: replaceAtIndex(prev.experiences, index, {
+                              ...experience,
+                              endDate: event.target.value,
+                            }),
+                          }))
+                        }
+                        placeholder="结束时间"
+                        className={inputClassName}
                       />
                     </div>
                     <textarea
@@ -661,8 +797,20 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                         }))
                       }
                       placeholder="工作要点，每行一条"
-                      className="mt-4 w-full rounded-3xl border border-[color:var(--border)] bg-white px-4 py-3"
+                      className={`mt-4 ${textareaClassName}`}
                     />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          experiences: removeAtIndex(prev.experiences, index),
+                        }))
+                      }
+                      className={`mt-4 ${removeButtonClassName}`}
+                    >
+                      删除这段实习经历
+                    </button>
                   </div>
                 ))}
               </div>
@@ -670,7 +818,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
 
             <div>
               <div className="mb-3 flex items-center justify-between gap-4">
-                <h3 className="font-medium">奖项与证书</h3>
+                <h3 className="font-medium text-slate-900">奖项与证书</h3>
                 <button
                   type="button"
                   onClick={() =>
@@ -703,7 +851,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                           }))
                         }
                         placeholder="奖项名称"
-                        className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                        className={inputClassName}
                       />
                       <input
                         value={award.issuer ?? ""}
@@ -717,7 +865,21 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                           }))
                         }
                         placeholder="颁发方"
-                        className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3"
+                        className={inputClassName}
+                      />
+                      <input
+                        value={award.awardDate ?? ""}
+                        onChange={(event) =>
+                          setDraft((prev) => ({
+                            ...prev,
+                            awards: replaceAtIndex(prev.awards, index, {
+                              ...award,
+                              awardDate: event.target.value,
+                            }),
+                          }))
+                        }
+                        placeholder="获奖时间"
+                        className={`${inputClassName} md:col-span-2`}
                       />
                     </div>
                     <textarea
@@ -733,8 +895,20 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                         }))
                       }
                       placeholder="补充说明"
-                      className="mt-4 w-full rounded-3xl border border-[color:var(--border)] bg-white px-4 py-3"
+                      className={`mt-4 ${textareaClassName}`}
                     />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          awards: removeAtIndex(prev.awards, index),
+                        }))
+                      }
+                      className={`mt-4 ${removeButtonClassName}`}
+                    >
+                      删除这条奖项或证书
+                    </button>
                   </div>
                 ))}
               </div>
@@ -745,13 +919,28 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
 
       <div className="space-y-6 xl:sticky xl:top-6 xl:self-start">
         <SectionCard
+          tone="subtle"
+          title="编辑原则"
+          description="先保证信息真实，再优化表达。这里的保存只会生成新版本，不会覆盖你的母版。"
+        >
+          <div className="space-y-3 text-sm leading-6 text-[color:var(--muted)]">
+            <p>联系方式与目标岗位决定阅读入口，建议优先确认。</p>
+            <p>项目和实习要尽量写出动作、方法和结果，避免空泛描述。</p>
+            <p>技能清单建议按类别组织，避免长串堆叠。</p>
+          </div>
+        </SectionCard>
+
+        <SectionCard
           title="实时预览"
-          description="右侧预览直接基于 content_json 渲染，保存时会同步生成 Markdown。"
+          description="右侧预览直接基于 content_json 渲染，保存后会同步生成 Markdown。"
         >
           <ResumePreview content={deferredDraft} />
         </SectionCard>
 
-        <SectionCard title="版本备注">
+        <SectionCard
+          title="版本备注"
+          description="这里展示当前版本的生成摘要和风险提醒，方便继续编辑时对齐边界。"
+        >
           {currentVersion.changeSummary?.generationSummary ? (
             <p className="text-sm leading-6 text-[color:var(--muted)]">
               {currentVersion.changeSummary.generationSummary}

@@ -314,9 +314,7 @@ export function ResumeVersionsBrowser({
   if (!selectedVersion) {
     return (
       <SectionCard title="暂无版本">
-        <p className="text-sm text-[color:var(--muted)]">
-          当前还没有可浏览的简历版本。
-        </p>
+        <p className="text-sm text-[color:var(--muted)]">当前还没有可浏览的简历版本。</p>
       </SectionCard>
     );
   }
@@ -340,7 +338,7 @@ export function ResumeVersionsBrowser({
         <div className="space-y-6">
           <SectionCard
             title="版本列表"
-            description="点击任一版本后，右侧会展示预览、来源版本和结构化差异。"
+            description="点击任意版本后，右侧会展示预览、来源版本和结构化差异。"
           >
             <div className="space-y-3">
               {workspace.versions.map((version) => (
@@ -370,15 +368,12 @@ export function ResumeVersionsBrowser({
 
           <SectionCard
             title="版本说明"
-            description="复制、回滚、重命名和删除都围绕当前选中的历史版本执行，并继续保留用户隔离与审计记录。"
+            description="复制、回滚、重命名和删除都围绕当前选中的版本执行。"
           >
             <div className="space-y-3 text-sm leading-6 text-[color:var(--muted)]">
               <p>当前选中类型：{getVersionTypeLabel(selectedVersion.versionType)}</p>
               <p>当前最新版本：{currentVersion?.versionName ?? "暂无"}</p>
-              <p>
-                来源版本：
-                {sourceVersion ? sourceVersion.versionName : "无，当前是源版本"}
-              </p>
+              <p>来源版本：{sourceVersion ? sourceVersion.versionName : "当前就是源版本"}</p>
               {selectedVersion.jobTargetTitle ? (
                 <p>目标岗位：{selectedVersion.jobTargetTitle}</p>
               ) : null}
@@ -389,11 +384,6 @@ export function ResumeVersionsBrowser({
                 版本摘要：
                 {selectedVersion.changeSummary?.generationSummary ?? "当前版本还没有额外说明。"}
               </p>
-              {workspace.versions.length <= 1 ? (
-                <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
-                  当前只剩 1 个版本，不能直接删除。
-                </p>
-              ) : null}
             </div>
 
             {isEditingSelectedVersion ? (
@@ -434,7 +424,7 @@ export function ResumeVersionsBrowser({
                   disabled={!canCopy}
                   className="inline-flex rounded-full border border-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-[color:var(--accent)] transition hover:bg-[color:var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {pendingAction === "copy" ? "创建副本中..." : "创建副本"}
+                  {pendingAction === "copy" ? "创建中..." : "创建副本"}
                 </button>
                 <button
                   type="button"
@@ -472,7 +462,7 @@ export function ResumeVersionsBrowser({
         <div className="space-y-6">
           <SectionCard
             title="版本预览"
-            description="预览直接基于 content_json 渲染，便于比对不同版本的落地效果。"
+            description="预览直接基于 content_json 渲染，便于比较不同版本的落地效果。"
           >
             <ResumePreview content={selectedVersion.contentJson} />
           </SectionCard>

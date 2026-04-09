@@ -132,6 +132,26 @@ function groupIssuesByCategory(issues: DiagnosisIssueRecord[]) {
     .filter((group) => group.items.length > 0);
 }
 
+function MetricCard({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-[color:var(--border)] bg-white px-4 py-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+        {label}
+      </p>
+      <p className="mt-3 text-2xl font-semibold text-[color:var(--foreground)]">{value}</p>
+      <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">{hint}</p>
+    </div>
+  );
+}
+
 export function ResumeDiagnoseWorkbench({
   resumeId,
   initialSourceVersion,
@@ -319,6 +339,35 @@ export function ResumeDiagnoseWorkbench({
       <section className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
         <div className="space-y-6">
           <SectionCard
+            tone="accent"
+            title="诊断概览"
+            description="先跑规则检查，再做语义诊断。可自动应用的建议会在确认后生成新版本。"
+          >
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <MetricCard
+                label="源版本"
+                value={sourceVersion.versionName}
+                hint="诊断与应用都围绕当前版本展开。"
+              />
+              <MetricCard
+                label="总体分"
+                value={report ? `${report.scoreOverview.overall}` : "--"}
+                hint="评分只是辅助，更重要的是下面的问题证据。"
+              />
+              <MetricCard
+                label="问题数"
+                value={report ? `${report.issues.length}` : "0"}
+                hint="覆盖内容、表达、结构、匹配和 ATS。"
+              />
+              <MetricCard
+                label="可自动应用"
+                value={`${autoApplicableSuggestions.length}`}
+                hint="这些建议支持勾选后直接生成新版本。"
+              />
+            </div>
+          </SectionCard>
+
+          <SectionCard
             title="诊断源版本"
             description="本次诊断基于当前版本执行，诊断建议应用后会新建版本，不会覆盖源版本。"
           >
@@ -345,34 +394,32 @@ export function ResumeDiagnoseWorkbench({
 
           <SectionCard
             title="诊断控制台"
-            description="先跑规则引擎，再接入 ResumeDiagnoserAgent 做语义诊断。"
+            description="先执行规则引擎，再接入 ResumeDiagnoserAgent 做语义分析。"
           >
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-4 text-sm leading-6 text-[color:var(--muted)]">
-                <p>规则检查覆盖内容、表达、结构、匹配和 ATS 五个维度。</p>
-                <p className="mt-2">
-                  诊断建议只会在真实信息边界内给出，可自动应用的建议也会另存为新版本。
-                </p>
-              </div>
+            <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-4 text-sm leading-6 text-[color:var(--muted)]">
+              <p>规则检查覆盖内容、表达、结构、匹配和 ATS 五个维度。</p>
+              <p className="mt-2">
+                建议只会在真实信息边界内给出，可自动应用的建议也会另存为新版本。
+              </p>
+            </div>
 
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={handleDiagnose}
-                  disabled={isDiagnosing}
-                  className="inline-flex rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isDiagnosing ? "诊断中..." : "运行简历诊断"}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleApplySuggestions}
-                  disabled={selectedSuggestionIds.length === 0 || isApplying}
-                  className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-semibold text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isApplying ? "应用中..." : "应用已勾选建议"}
-                </button>
-              </div>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={handleDiagnose}
+                disabled={isDiagnosing}
+                className="inline-flex rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isDiagnosing ? "诊断中..." : "运行简历诊断"}
+              </button>
+              <button
+                type="button"
+                onClick={handleApplySuggestions}
+                disabled={selectedSuggestionIds.length === 0 || isApplying}
+                className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-semibold text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isApplying ? "应用中..." : "应用已勾选建议"}
+              </button>
             </div>
           </SectionCard>
 
@@ -442,7 +489,7 @@ export function ResumeDiagnoseWorkbench({
 
         <SectionCard
           title="源版本预览"
-          description="右侧始终展示当前诊断源版本，方便对照问题和后续应用结果。"
+          description="右侧始终展示当前诊断源版本，方便对照问题与应用结果。"
         >
           <ResumePreview content={sourceVersion.contentJson} />
         </SectionCard>
@@ -452,7 +499,7 @@ export function ResumeDiagnoseWorkbench({
         <div className="space-y-6">
           <SectionCard
             title="诊断总览"
-            description="评分只作辅助参考，更重要的是下面的问题证据和建议。"
+            description="评分只作辅助参考，更重要的是问题证据和可执行建议。"
           >
             {!report ? (
               <div className="rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-6 text-sm leading-6 text-[color:var(--muted)]">
@@ -557,7 +604,7 @@ export function ResumeDiagnoseWorkbench({
         <div className="space-y-6">
           <SectionCard
             title="建议列表"
-            description="支持自动应用的建议可以勾选后生成新版本；其余建议保留给你手动确认。"
+            description="支持自动应用的建议可勾选后生成新版本，其余建议保留给你手动确认。"
           >
             {!report ? (
               <div className="rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-6 text-sm leading-6 text-[color:var(--muted)]">
@@ -565,7 +612,7 @@ export function ResumeDiagnoseWorkbench({
               </div>
             ) : report.suggestions.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-6 text-sm leading-6 text-[color:var(--muted)]">
-                当前没有额外建议，可以直接继续编辑或导出。
+                当前没有额外建议，可以继续编辑或直接导出。
               </div>
             ) : (
               <div className="space-y-3">
@@ -594,9 +641,7 @@ export function ResumeDiagnoseWorkbench({
                         />
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-medium text-slate-900">
-                              {suggestion.title}
-                            </p>
+                            <p className="font-medium text-slate-900">{suggestion.title}</p>
                             <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[color:var(--accent)]">
                               {getCategoryLabel(suggestion.category)}
                             </span>
@@ -622,27 +667,20 @@ export function ResumeDiagnoseWorkbench({
                     </label>
                   );
                 })}
-
-                {autoApplicableSuggestions.length > 0 ? (
-                  <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-4 text-sm leading-6 text-[color:var(--muted)]">
-                    当前共有 {autoApplicableSuggestions.length} 条建议支持自动应用，默认勾选。
-                  </div>
-                ) : null}
               </div>
             )}
           </SectionCard>
 
           <SectionCard
             title="最新应用结果"
-            description="自动应用建议后，新版本会立刻出现在这里，并同步进入版本链。"
+            description="自动应用建议后，新版本会立即出现在这里，并同步进入版本链。"
           >
             {appliedVersion ? (
               <div className="space-y-4">
                 <div className="rounded-2xl bg-[color:var(--accent-soft)] px-4 py-4">
                   <p className="font-medium">{appliedVersion.versionName}</p>
                   <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
-                    {appliedVersion.changeSummary?.generationSummary ??
-                      "新的诊断应用版本已生成。"}
+                    {appliedVersion.changeSummary?.generationSummary ?? "新的诊断应用版本已生成。"}
                   </p>
                 </div>
                 <ResumePreview content={appliedVersion.contentJson} />
@@ -659,7 +697,7 @@ export function ResumeDiagnoseWorkbench({
       <ResumeDiffView
         diffSections={diffSections}
         title="诊断应用差异"
-        description="这里只展示应用建议前后的结构化差异，方便确认没有越过真实边界。"
+        description="这里展示应用建议前后的结构化差异，方便确认没有越过真实边界。"
         emptyMessage="应用建议后，这里会展示相对源版本的结构化差异。"
       />
 

@@ -215,7 +215,11 @@ export function createSkillGroup(): ResumeSkillGroup {
 export function renderResumeMarkdown(content: ResumeContentJson) {
   const lines = renderBasicInfo(content.basic);
 
-  appendSection(lines, "个人简介", cleanValue(content.summary) ? [cleanValue(content.summary)] : []);
+  appendSection(
+    lines,
+    "个人简介",
+    cleanValue(content.summary) ? [cleanValue(content.summary)] : [],
+  );
   appendSection(lines, "教育经历", renderEducation(content.education));
   appendSection(lines, "项目经历", renderProjects(content.projects));
   appendSection(lines, "实习经历", renderExperiences(content.experiences));

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getAuthSession } from "@/auth";
@@ -34,7 +35,51 @@ export default async function ResumeExportPage({ params }: ResumePageProps) {
       <PageIntro
         eyebrow="Export"
         title={`导出与交付：${workspace.resume.name}`}
-        description="当前导出中心已经打通 Markdown 与 PDF 两条链路：Markdown 保留源稿可编辑性，PDF 通过稳定 HTML 模板生成可投递版本，并将状态沉淀到 exports 表。"
+        description="当前导出中心已经打通 Markdown 和 PDF 两条链路。Markdown 保留源稿可编辑性，PDF 通过稳定 HTML 模板生成投递版，并将状态沉淀到导出记录中。"
+        actions={
+          <>
+            <Link
+              href={`/resumes/${resumeId}/versions`}
+              className="inline-flex rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
+            >
+              先挑选版本
+            </Link>
+            <Link
+              href={`/resumes/${resumeId}/diagnose`}
+              className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+            >
+              返回诊断
+            </Link>
+          </>
+        }
+        meta={
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-[color:var(--border)] bg-white/70 px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                默认导出版本
+              </p>
+              <p className="mt-3 text-lg font-semibold text-[color:var(--foreground)]">
+                {workspace.currentVersion.versionName}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--border)] bg-white/70 px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                历史导出
+              </p>
+              <p className="mt-3 text-lg font-semibold text-[color:var(--foreground)]">
+                {exportHistory.length} 条
+              </p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--border)] bg-white/70 px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                可导出版本
+              </p>
+              <p className="mt-3 text-lg font-semibold text-[color:var(--foreground)]">
+                {workspace.versions.length} 个
+              </p>
+            </div>
+          </div>
+        }
       />
 
       <ResumeExportCenter

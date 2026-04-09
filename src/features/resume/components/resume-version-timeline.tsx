@@ -12,11 +12,11 @@ function getVersionTypeLabel(type: ResumeVersionRecord["versionType"]) {
     case "master":
       return "母版";
     case "manual":
-      return "手动";
+      return "手动编辑";
     case "job_targeted":
-      return "岗位版";
+      return "岗位版本";
     case "ai_rewrite":
-      return "诊断应用版";
+      return "诊断应用";
     default:
       return type;
   }
@@ -29,9 +29,9 @@ function getCreatedByLabel(type: ResumeVersionRecord["createdBy"]) {
     case "ai_generate":
       return "AI 生成";
     case "ai_optimize":
-      return "AI 优化";
+      return "AI 定制";
     case "ai_diagnose_apply":
-      return "应用诊断";
+      return "应用诊断建议";
     default:
       return type;
   }
@@ -43,7 +43,7 @@ export function ResumeVersionTimeline({
 }: ResumeVersionTimelineProps) {
   if (versions.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-4 text-sm text-[color:var(--muted)]">
+      <div className="rounded-3xl border border-dashed border-[color:var(--border)] px-5 py-5 text-sm text-[color:var(--muted)]">
         还没有可展示的版本记录。
       </div>
     );
@@ -55,21 +55,23 @@ export function ResumeVersionTimeline({
         <div
           key={version.id}
           className={cn(
-            "rounded-2xl border px-4 py-4",
+            "rounded-[26px] border px-4 py-4 transition",
             version.id === currentVersionId
-              ? "border-[color:var(--accent)] bg-[color:var(--accent-soft)]"
-              : "border-[color:var(--border)] bg-[color:var(--surface-strong)]",
+              ? "border-[color:var(--accent-soft-strong)] bg-[linear-gradient(180deg,rgba(15,106,111,0.14),rgba(255,255,255,0.9))] shadow-[0_20px_44px_-34px_rgba(15,106,111,0.7)]"
+              : "border-[color:var(--border)] bg-white/76",
           )}
         >
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="font-medium">{version.versionName}</p>
+              <p className="font-semibold text-[color:var(--foreground)]">
+                {version.versionName}
+              </p>
               <p className="mt-1 text-sm text-[color:var(--muted)]">
                 {getCreatedByLabel(version.createdBy)} · {formatResumeDate(version.createdAt)}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[color:var(--accent)]">
+              <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-[color:var(--accent)]">
                 {getVersionTypeLabel(version.versionType)}
               </span>
               {version.id === currentVersionId ? (

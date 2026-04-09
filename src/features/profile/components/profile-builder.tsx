@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { SectionCard } from "@/components/section-card";
@@ -99,18 +100,21 @@ export function ProfileBuilder({ initialSnapshot }: ProfileBuilderProps) {
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <SectionCard
           title="建档进度"
-          description="先把必填母版资料沉淀扎实，后续 ResumeGeneratorAgent 会直接读取这份 profile snapshot。"
+          description="先把必填资料补齐，再进入母版生成会更稳。顶部摘要区会优先说明当前完成度和缺失项，而不是让用户直接淹没在表单里。"
+          tone="accent"
         >
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between gap-4 text-sm">
-                <span className="font-medium">必填模块完成度</span>
+                <span className="font-medium text-[color:var(--foreground)]">
+                  必填模块完成度
+                </span>
                 <span className="text-[color:var(--muted)]">
                   {snapshot.completion.requiredCompleted} /{" "}
                   {snapshot.completion.requiredTotal}
                 </span>
               </div>
-              <div className="mt-3 h-3 rounded-full bg-[color:var(--accent-soft)]">
+              <div className="mt-3 h-3 rounded-full bg-white/70">
                 <div
                   className="h-full rounded-full bg-[color:var(--accent)] transition-all"
                   style={{ width: `${progress}%` }}
@@ -127,7 +131,7 @@ export function ProfileBuilder({ initialSnapshot }: ProfileBuilderProps) {
                 return (
                   <div
                     key={module.slug}
-                    className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-3"
+                    className="rounded-2xl border border-[color:var(--border)] bg-white/76 px-4 py-3"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <p className="font-medium">{module.title}</p>
@@ -152,88 +156,100 @@ export function ProfileBuilder({ initialSnapshot }: ProfileBuilderProps) {
           </div>
         </SectionCard>
 
-        <SectionCard
-          title="当前状态"
-          description="这里展示已经接入的建档资产量，以及可以补充进母版资料库的可选模块。"
-        >
-          <div className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-              <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-                <div className="rounded-2xl bg-[color:var(--accent-soft)] px-4 py-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                    Education
+        <div className="space-y-6">
+          <SectionCard
+            title="当前资料概览"
+            description="用户最需要先理解的是：自己已经沉淀了多少资料，缺口在哪里。"
+          >
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                { label: "Education", value: snapshot.counts.educations, accent: true },
+                { label: "Project", value: snapshot.counts.projects, accent: true },
+                { label: "Skill", value: snapshot.counts.skills, accent: true },
+                { label: "Experience", value: snapshot.counts.experiences, accent: false },
+                { label: "Award", value: snapshot.counts.awards, accent: false },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className={cn(
+                    "rounded-2xl border px-4 py-4",
+                    item.accent
+                      ? "border-[color:var(--accent-soft-strong)] bg-[color:var(--accent-soft)]"
+                      : "border-[color:var(--border)] bg-white/76",
+                  )}
+                >
+                  <p
+                    className={cn(
+                      "text-xs font-semibold uppercase tracking-[0.18em]",
+                      item.accent
+                        ? "text-[color:var(--accent)]"
+                        : "text-[color:var(--muted)]",
+                    )}
+                  >
+                    {item.label}
                   </p>
-                  <p className="mt-3 text-2xl font-semibold">
-                    {snapshot.counts.educations}
-                  </p>
-                </div>
-                <div className="rounded-2xl bg-[color:var(--accent-soft)] px-4 py-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                    Project
-                  </p>
-                  <p className="mt-3 text-2xl font-semibold">
-                    {snapshot.counts.projects}
-                  </p>
-                </div>
-                <div className="rounded-2xl bg-[color:var(--accent-soft)] px-4 py-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                    Skill
-                  </p>
-                  <p className="mt-3 text-2xl font-semibold">
-                    {snapshot.counts.skills}
-                  </p>
-                </div>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
-                    Experience
-                  </p>
-                  <p className="mt-3 text-2xl font-semibold">
-                    {snapshot.counts.experiences}
+                  <p className="mt-3 text-2xl font-semibold text-[color:var(--foreground)]">
+                    {item.value}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
-                    Award
+              ))}
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            title="下一步建议"
+            description="把缺失信息和推荐动作放在一起，用户更容易知道下一步应该去哪里。"
+            tone="subtle"
+          >
+            <div className="space-y-4">
+              {optionalModules.length > 0 ? (
+                <div className="rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-4">
+                  <p className="font-medium text-[color:var(--foreground)]">
+                    当前开放的可选模块
                   </p>
-                  <p className="mt-3 text-2xl font-semibold">
-                    {snapshot.counts.awards}
-                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {optionalModules.map((module) => (
+                      <span
+                        key={module.slug}
+                        className="rounded-full border border-[color:var(--border)] bg-white/76 px-3 py-1 text-xs font-medium text-[color:var(--muted)]"
+                      >
+                        {module.title}
+                      </span>
+                    ))}
+                  </div>
                 </div>
+              ) : null}
+
+              {snapshot.completion.missingSlugs.length > 0 ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-800">
+                  还缺少：
+                  {snapshot.completion.missingSlugs
+                    .map((slug) => getModuleLabel(snapshot.modules, slug))
+                    .join("、")}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm leading-6 text-emerald-700">
+                  建档必填模块已经补齐，可以继续进入母版简历生成链路。
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/resumes"
+                  className="inline-flex rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
+                >
+                  去简历中心
+                </Link>
+                <Link
+                  href="/onboarding"
+                  className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                >
+                  返回引导页
+                </Link>
               </div>
             </div>
-
-            {optionalModules.length > 0 ? (
-              <div className="rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-4">
-                <p className="font-medium">当前开放的可选模块</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {optionalModules.map((module) => (
-                    <span
-                      key={module.slug}
-                      className="rounded-full bg-[color:var(--surface-strong)] px-3 py-1 text-xs font-medium text-[color:var(--muted)]"
-                    >
-                      {module.title}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {snapshot.completion.missingSlugs.length > 0 ? (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-800">
-                还缺少：
-                {snapshot.completion.missingSlugs
-                  .map((slug) => getModuleLabel(snapshot.modules, slug))
-                  .join("、")}
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm leading-6 text-emerald-700">
-                建档必填模块已经补齐，可以继续进入母版简历生成链路。
-              </div>
-            )}
-          </div>
-        </SectionCard>
+          </SectionCard>
+        </div>
       </section>
 
       <BasicProfileForm

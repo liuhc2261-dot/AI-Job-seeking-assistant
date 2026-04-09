@@ -194,11 +194,8 @@ function renderPaymentPanel(session: CommercePaymentSession | null) {
             rel="noreferrer"
             className="inline-flex text-sm font-medium text-[color:var(--accent)] underline-offset-4 hover:underline"
           >
-            单独打开二维码
+            单独打开支付链接
           </a>
-        ) : null}
-        {!session.paymentUrl && session.status === "not_configured" ? (
-          <p>请先配置对应支付方式的环境变量，再重新创建订单。</p>
         ) : null}
       </div>
     </div>
@@ -232,9 +229,7 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4">
               <p className="text-sm text-[color:var(--muted)]">当前套餐</p>
-              <p className="mt-2 text-2xl font-semibold">
-                {overview.profile.planLabel}
-              </p>
+              <p className="mt-2 text-2xl font-semibold">{overview.profile.planLabel}</p>
               <p className="mt-2 text-sm text-[color:var(--muted)]">
                 当前模型：{overview.profile.currentAiModel}
               </p>
@@ -246,24 +241,9 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
             <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4">
               <p className="text-sm text-[color:var(--muted)]">剩余次数</p>
               <div className="mt-3 space-y-2 text-sm text-[color:var(--muted)]">
-                <p>
-                  母版生成：{
-                    overview.profile.quotas.masterResumeCreditsRemaining
-                  }{" "}
-                  次
-                </p>
-                <p>
-                  JD 定制：{
-                    overview.profile.quotas.jdTailorCreditsRemaining
-                  }{" "}
-                  次
-                </p>
-                <p>
-                  简历诊断：{
-                    overview.profile.quotas.diagnosisCreditsRemaining
-                  }{" "}
-                  次
-                </p>
+                <p>母版生成：{overview.profile.quotas.masterResumeCreditsRemaining} 次</p>
+                <p>JD 定制：{overview.profile.quotas.jdTailorCreditsRemaining} 次</p>
+                <p>简历诊断：{overview.profile.quotas.diagnosisCreditsRemaining} 次</p>
                 <p>
                   导出权益：
                   {overview.profile.quotas.hasUnlimitedExports
@@ -289,7 +269,7 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
 
         <SectionCard
           title="支付方式"
-          description="当前支持两种收款路径：有商户参数时走正式网关；没有商户参数时展示个人收款码并人工确认。"
+          description="当前支持微信、支付宝和人工开通三种路径，可先跑通内测收费闭环。"
         >
           <div className="grid gap-3 sm:grid-cols-3">
             {(Object.entries(paymentChannelLabels) as Array<
@@ -315,7 +295,7 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
                   <p className="font-medium">{label}</p>
                   <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
                     {channel === "manual"
-                      ? "适合完全人工确认到账后开通。"
+                      ? "适合完全人工确认到账后再开通权益。"
                       : "优先走商户网关；若未配置商户参数，则回退到个人收款码模式。"}
                   </p>
                 </button>
@@ -324,9 +304,9 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
           </div>
 
           <div className="mt-4 rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-4 text-sm leading-6 text-[color:var(--muted)]">
-            <p>免费试用默认使用 GPT-5.1，29 元套餐默认使用 GPT-5.4。</p>
+            <p>免费试用默认使用 GPT-5.1，29 元冲刺包默认使用 GPT-5.4。</p>
             <p>
-              你现在可以先用个人微信/支付宝收款码跑通内测收费，到账后手动确认开通套餐。
+              现在可以先用个人微信或支付宝收款码跑通内测收费，到帐后再手动确认开通套餐。
             </p>
           </div>
         </SectionCard>
@@ -424,14 +404,10 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
             <div className="space-y-4">
               <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4">
                 <p className="text-sm text-[color:var(--muted)]">订单号</p>
-                <p className="mt-2 break-all font-mono text-sm">
-                  {pendingOrder.id}
-                </p>
+                <p className="mt-2 break-all font-mono text-sm">{pendingOrder.id}</p>
                 <p className="mt-3 text-sm text-[color:var(--muted)]">
                   套餐：
-                  {pendingOrder.planCode === "jd_diagnose_pack_29"
-                    ? "29 元冲刺包"
-                    : "免费试用"}
+                  {pendingOrder.planCode === "jd_diagnose_pack_29" ? "29 元冲刺包" : "免费试用"}
                 </p>
                 <p className="mt-1 text-sm text-[color:var(--muted)]">
                   金额：{formatAmount(pendingOrder.amountCents, pendingOrder.currency)}
@@ -448,8 +424,8 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
 
               <div className="rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-4 text-sm leading-6 text-[color:var(--muted)]">
                 <p>1. 用对应 App 扫码，付款金额与订单金额保持一致。</p>
-                <p>2. 付款后保存截图，并记录订单号。</p>
-                <p>3. 你确认到账后，可在后台或脚本里手动确认开通权益。</p>
+                <p>2. 支付后保存截图，并记录订单号。</p>
+                <p>3. 确认到账后，可在后台或脚本里手动确认开通权益。</p>
               </div>
 
               <div className="flex flex-wrap gap-3">
@@ -493,9 +469,7 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
                             paymentChannel: pendingOrderChannel,
                             source: "mock_confirm",
                           });
-                          setNotice(
-                            "开发环境已模拟确认到账，套餐权益已经发放。",
-                          );
+                          setNotice("开发环境已模拟确认到账，套餐权益已经发放。");
                           router.refresh();
                         } catch (requestError) {
                           setError(
@@ -514,14 +488,14 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
             </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-6 text-sm leading-6 text-[color:var(--muted)]">
-              当前没有待支付订单。点击上方套餐按钮后，这里会直接展示你的收款码或支付二维码。
+              当前没有待支付订单。点击上方套餐按钮后，这里会直接展示收款码或支付二维码。
             </div>
           )}
         </SectionCard>
 
         <SectionCard
           title="订单记录"
-          description="方便你核对每笔付款对应的订单状态和到账结果。"
+          description="方便核对每笔付款对应的订单状态和到账结果。"
         >
           {overview.orders.length > 0 ? (
             <div className="space-y-3">
@@ -533,9 +507,7 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="font-medium">
-                        {order.planCode === "jd_diagnose_pack_29"
-                          ? "29 元冲刺包"
-                          : "免费试用"}
+                        {order.planCode === "jd_diagnose_pack_29" ? "29 元冲刺包" : "免费试用"}
                       </p>
                       <p className="mt-1 text-sm text-[color:var(--muted)]">
                         状态：{getOrderStatusLabel(order)}
@@ -557,7 +529,7 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
             </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-6 text-sm leading-6 text-[color:var(--muted)]">
-              还没有订单记录。建议先创建一笔微信或支付宝订单，把个人收款码模式跑通。
+              还没有订单记录。建议先创建一笔微信或支付宝订单，把内测收费链路跑通。
             </div>
           )}
         </SectionCard>

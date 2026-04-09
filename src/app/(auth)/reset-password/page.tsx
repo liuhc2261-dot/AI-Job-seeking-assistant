@@ -28,21 +28,22 @@ export default async function ResetPasswordPage({
   return (
     <div className="pb-12">
       <SiteHeader authenticated={false} />
-      <main className="mx-auto grid w-full max-w-6xl gap-6 px-6 pt-8 lg:grid-cols-[1fr_440px] lg:px-8">
+      <main className="mx-auto grid w-full max-w-6xl gap-6 px-4 pt-8 sm:px-6 lg:grid-cols-[1fr_440px] lg:px-8">
         <SectionCard
           eyebrow="重置密码"
-          title="设置新的登录密码"
-          description="重置成功后，新的密码会立即写回账号系统，并保留完整的审计记录。"
+          title="设置新的登录密码，然后继续回到工作台"
+          description="用户完成重置后，后续的资料、简历版本和导出记录都还在，所以页面只保留最必要的信息，降低操作负担。"
+          tone="accent"
         >
-          <ul className="space-y-3 text-sm leading-6 text-[color:var(--muted)]">
-            <li>令牌失效或被使用后，需要重新回到找回密码页生成新的入口。</li>
-            <li>本次修改只更新密码，不会改动你的简历、建档或版本数据。</li>
-          </ul>
+          <div className="space-y-3 text-sm leading-6 text-[color:var(--muted)]">
+            <p>本次修改只会更新登录密码，不会覆盖已有简历和版本链。</p>
+            <p>如果重置入口失效，可以回到找回密码页重新申请一次。</p>
+          </div>
         </SectionCard>
 
         <SectionCard
           title="确认新密码"
-          description="请输入一个新的密码，用于后续正常登录。"
+          description="输入一个新的密码用于后续登录。"
         >
           <ResetPasswordForm token={token} />
         </SectionCard>

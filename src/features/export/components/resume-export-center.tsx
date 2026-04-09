@@ -105,6 +105,38 @@ function getExportStatusLabel(status: ResumeExportRecord["status"]) {
   }
 }
 
+function getTemplatePresentation(template: ExportTemplate) {
+  if (template.id === "ats-standard") {
+    return {
+      name: "标准 ATS 模板",
+      description: "单栏、清晰、稳健，优先保证中文排版和 ATS 可读性。",
+      recommendedFor: "校招 / 实习 / 通用岗位",
+    };
+  }
+
+  return template;
+}
+
+function getFormatPresentation(format: ExportFormatOption) {
+  if (format.id === "markdown") {
+    return {
+      ...format,
+      label: "Markdown 源稿",
+      description: "保留结构化内容和可编辑性，适合继续修改或二次排版。",
+    };
+  }
+
+  if (format.id === "pdf") {
+    return {
+      ...format,
+      label: "PDF 投递版",
+      description: "基于稳定模板生成最终投递文件，适合直接发送或上传。",
+    };
+  }
+
+  return format;
+}
+
 function getExportSuccessMessage(format: ResumeExportType) {
   return format === "pdf"
     ? "PDF 已导出，下载将自动开始。"
@@ -300,6 +332,47 @@ export function ResumeExportCenter({
       <section className="grid gap-6 xl:grid-cols-[0.94fr_1.06fr]">
         <div className="space-y-6">
           <SectionCard
+            tone="accent"
+            title="导出工作台"
+            description="先选择版本和模板，再决定输出 Markdown 源稿还是 PDF 投递版。"
+          >
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-2xl border border-[color:var(--border)] bg-white px-4 py-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                  当前版本
+                </p>
+                <p className="mt-3 text-lg font-semibold text-[color:var(--foreground)]">
+                  {selectedVersion?.versionName ?? "未选择"}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[color:var(--border)] bg-white px-4 py-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                  版本类型
+                </p>
+                <p className="mt-3 text-lg font-semibold text-[color:var(--foreground)]">
+                  {selectedVersion ? getVersionTypeLabel(selectedVersion.versionType) : "--"}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[color:var(--border)] bg-white px-4 py-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                  默认模板
+                </p>
+                <p className="mt-3 text-lg font-semibold text-[color:var(--foreground)]">
+                  {selectedTemplate ? getTemplatePresentation(selectedTemplate).name : "未选择"}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[color:var(--border)] bg-white px-4 py-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                  历史导出
+                </p>
+                <p className="mt-3 text-lg font-semibold text-[color:var(--foreground)]">
+                  {exports.length} 条
+                </p>
+              </div>
+            </div>
+          </SectionCard>
+
+          <SectionCard
             title="导出源版本"
             description="所有导出都围绕现有版本资产执行，不会覆盖内容。先选版本，再选择导出格式。"
           >
@@ -352,13 +425,13 @@ export function ResumeExportCenter({
                   >
                     {templates.map((template) => (
                       <option key={template.id} value={template.id}>
-                        {template.name}
+                        {getTemplatePresentation(template).name}
                       </option>
                     ))}
                   </select>
                   {selectedTemplate ? (
                     <p className="text-sm leading-6 text-[color:var(--muted)]">
-                      {selectedTemplate.description}
+                      {getTemplatePresentation(selectedTemplate).description}
                     </p>
                   ) : null}
                 </div>
@@ -393,37 +466,41 @@ export function ResumeExportCenter({
 
           <SectionCard
             title="导出格式"
-            description="当前 Markdown 和 PDF 都已接入真实链路，导出记录会写入 exports 表并保留下载入口。"
+            description="Markdown 和 PDF 都已经接入真实链路，导出记录会写入数据库并保留下载入口。"
           >
             <div className="grid gap-3">
-              {formats.map((format) => (
-                <div
-                  key={format.id}
-                  className={cn(
-                    "rounded-2xl border px-4 py-4",
-                    format.available
-                      ? "border-emerald-200 bg-emerald-50"
-                      : "border-[color:var(--border)] bg-[color:var(--surface-strong)]",
-                  )}
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <p className="font-medium">{format.label}</p>
-                    <span
-                      className={cn(
-                        "rounded-full px-3 py-1 text-xs font-semibold",
-                        format.available
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-amber-100 text-amber-700",
-                      )}
-                    >
-                      {format.available ? "已可用" : "待接入"}
-                    </span>
+              {formats.map((format) => {
+                const presentation = getFormatPresentation(format);
+
+                return (
+                  <div
+                    key={format.id}
+                    className={cn(
+                      "rounded-2xl border px-4 py-4",
+                      format.available
+                        ? "border-emerald-200 bg-emerald-50"
+                        : "border-[color:var(--border)] bg-[color:var(--surface-strong)]",
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="font-medium">{presentation.label}</p>
+                      <span
+                        className={cn(
+                          "rounded-full px-3 py-1 text-xs font-semibold",
+                          format.available
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-amber-100 text-amber-700",
+                        )}
+                      >
+                        {format.available ? "已可用" : "待接入"}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                      {presentation.description}
+                    </p>
                   </div>
-                  <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
-                    {format.description}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </SectionCard>
         </div>
@@ -431,23 +508,27 @@ export function ResumeExportCenter({
         <div className="space-y-6">
           <SectionCard
             title="稳定模板"
-            description="当前只保留 1 个稳定的 ATS 模板，用同一套 content_json 字段渲染 HTML，再交给服务端浏览器生成 PDF。"
+            description="当前只保留一套稳定的 ATS 模板，用同一份结构化数据渲染 HTML，再交给服务端生成 PDF。"
           >
             <div className="grid gap-4">
-              {templates.map((template) => (
-                <div
-                  key={template.id}
-                  className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-4"
-                >
-                  <p className="font-medium">{template.name}</p>
-                  <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
-                    {template.description}
-                  </p>
-                  <p className="mt-3 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--muted)]">
-                    {template.recommendedFor}
-                  </p>
-                </div>
-              ))}
+              {templates.map((template) => {
+                const presentation = getTemplatePresentation(template);
+
+                return (
+                  <div
+                    key={template.id}
+                    className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-4"
+                  >
+                    <p className="font-medium">{presentation.name}</p>
+                    <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                      {presentation.description}
+                    </p>
+                    <p className="mt-3 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--muted)]">
+                      {presentation.recommendedFor}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </SectionCard>
 
@@ -515,7 +596,7 @@ export function ResumeExportCenter({
               </div>
             ) : (
               <div className="rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-6 text-sm leading-6 text-[color:var(--muted)]">
-                还没有导出记录。选定版本后，可以先导出 Markdown，再直接生成 PDF 投递版。
+                还没有导出记录。选定版本后，可以先导出 Markdown，再生成 PDF 投递版。
               </div>
             )}
           </SectionCard>

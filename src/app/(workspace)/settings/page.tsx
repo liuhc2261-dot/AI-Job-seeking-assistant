@@ -28,7 +28,7 @@ const packageCards = [
       "1 次 JD 定制",
       "1 次诊断",
       "1 次 PDF 导出",
-      "版本保存不限量",
+      "版本保存不受限",
     ],
   },
   {
@@ -38,8 +38,8 @@ const packageCards = [
     perks: [
       "10 次 JD 定制",
       "10 次诊断",
-      "版本保存不限量",
-      "导出不限量",
+      "版本保存不受限",
+      "导出不受限",
       "更强模型用于 AI 生成链路",
     ],
   },
@@ -102,14 +102,14 @@ export default async function SettingsPage() {
     {
       label: "简历诊断",
       value: `${commercialProfile.quotas.diagnosisCreditsRemaining} 次`,
-      description: "规则诊断 + AI 诊断的剩余次数。",
+      description: "规则诊断与 AI 诊断的剩余次数。",
     },
     {
       label: "导出权益",
       value: commercialProfile.quotas.hasUnlimitedExports
         ? "不限量"
         : `${commercialProfile.quotas.pdfExportCreditsRemaining ?? 0} 次 PDF`,
-      description: "Markdown 继续可导出，PDF 导出按权益控制。",
+      description: "Markdown 持续可导出，PDF 导出按权益控制。",
     },
   ];
 
@@ -118,7 +118,7 @@ export default async function SettingsPage() {
       <PageIntro
         eyebrow="Settings"
         title="套餐、模型与上线配置"
-        description="这里把当前账号的商业化权益、模型路由和上线前要补齐的环境配置统一收口，方便我们边内测边收费。"
+        description="这里把当前账号的商业化权益、模型路由和上线前要补齐的环境配置统一收口，方便我们边内测边收款。"
       />
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
@@ -179,7 +179,9 @@ export default async function SettingsPage() {
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="font-medium">{order.planCode === "jd_diagnose_pack_29" ? "29 元冲刺包" : "免费试用"}</p>
+                      <p className="font-medium">
+                        {order.planCode === "jd_diagnose_pack_29" ? "29 元冲刺包" : "免费试用"}
+                      </p>
                       <p className="mt-1 text-sm text-[color:var(--muted)]">
                         渠道：{order.paymentChannel ?? "manual"} | 状态：{order.status}
                       </p>
@@ -224,7 +226,7 @@ export default async function SettingsPage() {
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <SectionCard
           title="环境就绪度"
-          description="内测收费前需要至少把这些环境变量和基础设施补齐。"
+          description="内测收费前，至少把这些环境变量和基础设施补齐。"
         >
           <div className="space-y-3">
             {readiness.map((item) => (

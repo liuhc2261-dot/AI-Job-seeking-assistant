@@ -52,6 +52,26 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+function MetricCard({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-[color:var(--border)] bg-white px-4 py-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+        {label}
+      </p>
+      <p className="mt-3 text-2xl font-semibold text-[color:var(--foreground)]">{value}</p>
+      <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">{hint}</p>
+    </div>
+  );
+}
+
 export function ResumeOptimizeWorkbench({
   resumeId,
   initialSourceVersion,
@@ -113,7 +133,7 @@ export function ResumeOptimizeWorkbench({
           setGeneratedVersion(null);
           setNotice({
             type: "success",
-            message: "JD 已解析完成，可以继续生成岗位定制版本。",
+            message: "JD 解析完成，可以继续生成岗位定制版本。",
           });
           captureAnalyticsEvent(telemetryEvents.jdParseSuccess, {
             resumeId,
@@ -174,7 +194,7 @@ export function ResumeOptimizeWorkbench({
           setGeneratedVersion(payload.data.currentVersion);
           setNotice({
             type: "success",
-            message: "岗位定制版本已生成，差异和新版本预览已更新。",
+            message: "岗位定制版本已生成，差异和新版本预览都已更新。",
           });
           captureAnalyticsEvent(telemetryEvents.resumeOptimizeSuccess, {
             resumeId,
@@ -216,13 +236,42 @@ export function ResumeOptimizeWorkbench({
       <section className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
         <div className="space-y-6">
           <SectionCard
+            tone="accent"
+            title="优化概览"
+            description="先确认源版本，再解析 JD，最后生成单独保存的岗位定制版本。"
+          >
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <MetricCard
+                label="源版本"
+                value={sourceVersion.versionName}
+                hint="所有优化都基于这个版本展开。"
+              />
+              <MetricCard
+                label="关键词"
+                value={`${analysis?.parsedKeywords.length ?? 0}`}
+                hint="解析出的核心岗位关键词数量。"
+              />
+              <MetricCard
+                label="匹配缺口"
+                value={`${analysis?.matchGaps.length ?? 0}`}
+                hint="当前版本暂未覆盖的重点词。"
+              />
+              <MetricCard
+                label="定制状态"
+                value={generatedVersion ? "已生成" : "待生成"}
+                hint="生成后会保存为新的岗位版。"
+              />
+            </div>
+          </SectionCard>
+
+          <SectionCard
             title="当前优化源版本"
             description="岗位优化默认基于当前版本生成新的 job_targeted 版本，不会覆盖源版本。"
           >
             <div className="space-y-3 text-sm leading-6 text-[color:var(--muted)]">
               <p>版本名称：{sourceVersion.versionName}</p>
               <p>版本类型：{sourceVersion.versionType}</p>
-              <p>更新时间：{formatDate(sourceVersion.updatedAt)}</p>
+              <p>最近更新时间：{formatDate(sourceVersion.updatedAt)}</p>
             </div>
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
@@ -249,7 +298,7 @@ export function ResumeOptimizeWorkbench({
               onChange={(event) => setJdText(event.target.value)}
               rows={16}
               placeholder="请粘贴完整 JD 文本..."
-              className="w-full rounded-3xl border border-[color:var(--border)] bg-white px-4 py-4 text-sm leading-6"
+              className="w-full rounded-3xl border border-[color:var(--border)] bg-white px-4 py-4 text-sm leading-6 outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent-soft-strong)]"
             />
             <div className="mt-4 flex flex-wrap gap-3">
               <button
@@ -333,7 +382,7 @@ export function ResumeOptimizeWorkbench({
                   </div>
 
                   <div className="rounded-2xl border border-[color:var(--border)] bg-white px-4 py-4">
-                    <p className="font-medium">技能要求与差距</p>
+                    <p className="font-medium">技能要求与缺口</p>
                     <div className="mt-3 space-y-3 text-sm leading-6">
                       <div>
                         <p className="text-[color:var(--muted)]">JD 技能要求</p>
@@ -365,9 +414,7 @@ export function ResumeOptimizeWorkbench({
                               </span>
                             ))
                           ) : (
-                            <p className="text-[color:var(--muted)]">
-                              当前版本已覆盖主要关键词。
-                            </p>
+                            <p className="text-[color:var(--muted)]">当前版本已覆盖主要关键词。</p>
                           )}
                         </div>
                       </div>
@@ -389,22 +436,21 @@ export function ResumeOptimizeWorkbench({
 
           <SectionCard
             title="最新岗位版本"
-            description="每次生成都会沉淀为新的 job_targeted 版本，并出现在版本链上。"
+            description="每次生成都会沉淀为新的岗位版，并出现在版本链中。"
           >
             {generatedVersion ? (
               <div className="space-y-4">
                 <div className="rounded-2xl bg-[color:var(--accent-soft)] px-4 py-4">
                   <p className="font-medium">{generatedVersion.versionName}</p>
                   <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
-                    {generatedVersion.changeSummary?.generationSummary ??
-                      "当前岗位版本还没有额外摘要。"}
+                    {generatedVersion.changeSummary?.generationSummary ?? "当前岗位版本已经生成。"}
                   </p>
                 </div>
                 <ResumePreview content={generatedVersion.contentJson} />
               </div>
             ) : (
               <div className="rounded-2xl border border-dashed border-[color:var(--border)] px-4 py-6 text-sm leading-6 text-[color:var(--muted)]">
-                还没有生成岗位定制版。完成 JD 解析后即可创建。
+                还没有生成岗位定制版本。完成 JD 解析后即可创建。
               </div>
             )}
           </SectionCard>
@@ -418,7 +464,7 @@ export function ResumeOptimizeWorkbench({
 
       <SectionCard
         title="当前版本链"
-        description="新生成的岗位版本已经合入当前简历资产，可以直接进入版本页继续查看。"
+        description="新生成的岗位版本已经合入当前简历资产，可以继续进入版本页查看。"
       >
         <div className="space-y-3">
           {workspace.versions.slice(0, 5).map((version) => (
