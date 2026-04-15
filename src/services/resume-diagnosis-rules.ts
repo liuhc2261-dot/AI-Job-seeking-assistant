@@ -170,23 +170,27 @@ function buildScoreOverview(issues: DiagnosisIssueRecord[]): DiagnosisScoreOverv
     low: 5,
   } as const;
   const categories = ["content", "expression", "structure", "match", "ats"] as const;
-  const categoryScores = categories.reduce<Record<(typeof categories)[number], number>>(
-    (result, category) => {
-      const totalPenalty = issues
-        .filter((issue) => issue.category === category)
-        .reduce((sum, issue) => sum + penalties[issue.severity], 0);
 
-      result[category] = Math.max(45, 100 - totalPenalty);
-      return result;
+  // O(n) single pass instead of O(5n) with 5 separate filter passes
+  const categoryPenalties = categories.reduce<Record<(typeof categories)[number], number>>(
+    (acc, category) => {
+      acc[category] = 0;
+      return acc;
     },
-    {
-      content: 100,
-      expression: 100,
-      structure: 100,
-      match: 100,
-      ats: 100,
-    },
+    { content: 0, expression: 0, structure: 0, match: 0, ats: 0 } as Record<string, number>,
   );
+
+  for (const issue of issues) {
+    categoryPenalties[issue.category] += penalties[issue.severity];
+  }
+
+  const categoryScores = {
+    content: Math.max(45, 100 - categoryPenalties.content),
+    expression: Math.max(45, 100 - categoryPenalties.expression),
+    structure: Math.max(45, 100 - categoryPenalties.structure),
+    match: Math.max(45, 100 - categoryPenalties.match),
+    ats: Math.max(45, 100 - categoryPenalties.ats),
+  };
   const overall = Math.round(
     (categoryScores.content +
       categoryScores.expression +

@@ -311,11 +311,14 @@ function applySuggestionPatch(
         },
       };
     case "append_skill_keywords": {
+      // O(n*m) -> O(n+m) by building a Set for O(1) lookup
+      const existingSkills = new Set(
+        content.skills.flatMap((group) =>
+          group.items.map((item) => item.trim().toLowerCase()),
+        ),
+      );
       const nextSkills = patch.skills.filter(
-        (skill) =>
-          !content.skills.some((group) =>
-            group.items.some((item) => item.trim().toLowerCase() === skill.trim().toLowerCase()),
-          ),
+        (skill) => !existingSkills.has(skill.trim().toLowerCase()),
       );
 
       if (nextSkills.length === 0) {

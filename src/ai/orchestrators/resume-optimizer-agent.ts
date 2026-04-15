@@ -127,11 +127,19 @@ function buildTargetedSummary(input: {
   return `围绕 ${targetRole} 方向整理现有经历，重点突出 ${highlightSkills}，并强化与 ${responsibilityFocus} 相关的可投递表达。`;
 }
 
+function buildMatchedTokenSet(tokens: string[]): Set<string> {
+  return new Set(tokens.map(normalizeToken));
+}
+
 function buildFallbackOptimizedResume(input: {
   sourceResume: ResumeContentJson;
   jdAnalysis: JDAnalysisRecord;
 }): ResumeOptimizerStructuredResult {
   const matchedSkills = getMatchedSkills(input);
+  // O(1) lookup instead of O(m) per check
+  const matchedTokenSet = buildMatchedTokenSet(matchedSkills);
+  const isMatched = (text: string) => matchedTokenSet.has(normalizeToken(text));
+
   const optimizedResume: ResumeContentJson = {
     ...input.sourceResume,
     basic: {
@@ -155,14 +163,12 @@ function buildFallbackOptimizedResume(input: {
         return project;
       }
 
+      const projectMatchedTokenSet = buildMatchedTokenSet(projectMatchedSkills);
+      const isProjectMatched = (text: string) => projectMatchedTokenSet.has(normalizeToken(text));
+
       const prioritizedTechStack = [
-        ...project.techStack.filter((tech) =>
-          projectMatchedSkills.some((skill) => containsToken(tech, skill)),
-        ),
-        ...project.techStack.filter(
-          (tech) =>
-            !projectMatchedSkills.some((skill) => containsToken(tech, skill)),
-        ),
+        ...project.techStack.filter((tech) => isProjectMatched(tech)),
+        ...project.techStack.filter((tech) => !isProjectMatched(tech)),
       ];
 
       return {
@@ -194,27 +200,25 @@ function buildFallbackOptimizedResume(input: {
       };
     }),
     skills: input.sourceResume.skills
-      .map((group) => ({
-        ...group,
-        items: [
-          ...group.items.filter((item) =>
-            matchedSkills.some((skill) => containsToken(item, skill)),
-          ),
-          ...group.items.filter(
-            (item) =>
-              !matchedSkills.some((skill) => containsToken(item, skill)),
-          ),
-        ],
-      }))
+      .map((group) => {
+        const matchedItems: string[] = [];
+        const unmatchedItems: string[] = [];
+        for (const item of group.items) {
+          if (isMatched(item)) {
+            matchedItems.push(item);
+          } else {
+            unmatchedItems.push(item);
+          }
+        }
+        return {
+          ...group,
+          items: [...matchedItems, ...unmatchedItems],
+        };
+      })
       .sort((left, right) => {
-        const leftScore = left.items.filter((item) =>
-          matchedSkills.some((skill) => containsToken(item, skill)),
-        ).length;
-        const rightScore = right.items.filter((item) =>
-          matchedSkills.some((skill) => containsToken(item, skill)),
-        ).length;
-
-        return rightScore - leftScore;
+        const leftMatchedCount = left.items.filter((item) => isMatched(item)).length;
+        const rightMatchedCount = right.items.filter((item) => isMatched(item)).length;
+        return rightMatchedCount - leftMatchedCount;
       }),
   };
   const normalizedResume = resumeContentJsonSchema.parse(optimizedResume);

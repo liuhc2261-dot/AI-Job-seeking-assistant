@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useDeferredValue, useMemo, useState, useTransition } from "react";
+import { useCallback, useDeferredValue, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { SectionCard } from "@/components/section-card";
@@ -20,6 +20,21 @@ import type {
   ResumeVersionRecord,
   ResumeWorkspace,
 } from "@/types/resume";
+
+type RewriteStyle = "concise" | "quantitative" | "professional";
+
+type ParagraphRewriteState = {
+  isOpen: boolean;
+  originalText: string;
+  rewrittenText: string;
+  context: string;
+  rewriteStyle: RewriteStyle;
+  changeType: "improved" | "polished" | "unchanged" | null;
+  explanation: string;
+  sectionType: "project" | "experience" | null;
+  sectionIndex: number | null;
+  bulletIndex: number | null;
+};
 
 type ResumeEditorProps = {
   resumeId: string;
@@ -45,17 +60,38 @@ type ResumeWorkspaceResponse =
       };
     };
 
+type RewriteApiResponse =
+  | {
+      success: true;
+      data: {
+        rewrittenText: string;
+        changeType: "improved" | "polished" | "unchanged";
+        explanation: string;
+        meta: {
+          provider: string;
+          model: string;
+          usedFallback: boolean;
+        };
+      };
+    }
+  | {
+      success: false;
+      error: {
+        message: string;
+      };
+    };
+
 const inputClassName =
-  "w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent-soft-strong)]";
+  "w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[color:var(--brand)] focus:ring-2 focus:ring-[color:var(--brand-soft-strong)]";
 
 const textareaClassName =
-  "w-full rounded-3xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent-soft-strong)]";
+  "w-full rounded-3xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition focus:border-[color:var(--brand)] focus:ring-2 focus:ring-[color:var(--brand-soft-strong)]";
 
 const secondaryButtonClassName =
-  "inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]";
+  "inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]";
 
 const removeButtonClassName =
-  "text-sm font-medium text-rose-600 transition hover:text-rose-700";
+  "text-sm font-medium text-[color:var(--error)] transition hover:text-[color:var(--error)]";
 
 function replaceAtIndex<T>(items: T[], index: number, nextValue: T) {
   return items.map((item, itemIndex) => (itemIndex === index ? nextValue : item));
@@ -114,6 +150,19 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
   const deferredDraft = useDeferredValue(draft);
   const [notice, setNotice] = useState<EditorNotice>(null);
   const [isPending, startTransition] = useTransition();
+  const [rewriteState, setRewriteState] = useState<ParagraphRewriteState>({
+    isOpen: false,
+    originalText: "",
+    rewrittenText: "",
+    context: "",
+    rewriteStyle: "concise",
+    changeType: null,
+    explanation: "",
+    sectionType: null,
+    sectionIndex: null,
+    bulletIndex: null,
+  });
+  const [isRewriting, startRewriteTransition] = useTransition();
 
   const contentStats = useMemo(
     () => [
@@ -141,7 +190,143 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
     [draft.education.length, draft.experiences.length, draft.projects.length, draft.skills.length],
   );
 
-  function saveDraft() {
+  const openRewriteModal = useCallback(
+    (
+      sectionType: "project" | "experience",
+      sectionIndex: number,
+      bulletIndex: number,
+      originalText: string,
+      context: string,
+    ) => {
+      setRewriteState({
+        isOpen: true,
+        originalText,
+        rewrittenText: "",
+        context,
+        rewriteStyle: "concise",
+        changeType: null,
+        explanation: "",
+        sectionType,
+        sectionIndex,
+        bulletIndex,
+      });
+    },
+    [],
+  );
+
+  const closeRewriteModal = useCallback(() => {
+    setRewriteState((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
+  }, []);
+
+  const handleRewrite = useCallback(() => {
+    if (!rewriteState.originalText.trim()) {
+      return;
+    }
+
+    startRewriteTransition(() => {
+      void (async () => {
+        try {
+          const response = await fetch(
+            `/api/resumes/${resumeId}/versions/${currentVersion.id}/rewrite-paragraph`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                sectionType: rewriteState.sectionType,
+                sectionIndex: rewriteState.sectionIndex,
+                bulletIndex: rewriteState.bulletIndex,
+                originalText: rewriteState.originalText,
+                context: rewriteState.context,
+                rewriteStyle: rewriteState.rewriteStyle,
+              }),
+            },
+          );
+          const payload = (await response.json()) as RewriteApiResponse;
+
+          if (!payload.success) {
+            setNotice({
+              type: "error",
+              message: payload.error.message,
+            });
+            return;
+          }
+
+          setRewriteState((prev) => ({
+            ...prev,
+            rewrittenText: payload.data.rewrittenText,
+            changeType: payload.data.changeType,
+            explanation: payload.data.explanation,
+          }));
+        } catch {
+          setNotice({
+            type: "error",
+            message: "改写失败，请稍后重试。",
+          });
+        }
+      })();
+    });
+  }, [rewriteState, resumeId, currentVersion.id]);
+
+  const applyRewrite = useCallback(() => {
+    if (!rewriteState.rewrittenText || rewriteState.sectionType === null) {
+      return;
+    }
+
+    setDraft((prev) => {
+      if (rewriteState.sectionType === "project" && rewriteState.sectionIndex !== null) {
+        const project = prev.projects[rewriteState.sectionIndex];
+
+        if (!project || rewriteState.bulletIndex === null) {
+          return prev;
+        }
+
+        const newBullets = [...project.bullets];
+        newBullets[rewriteState.bulletIndex] = rewriteState.rewrittenText;
+
+        return {
+          ...prev,
+          projects: replaceAtIndex(prev.projects, rewriteState.sectionIndex, {
+            ...project,
+            bullets: newBullets,
+          }),
+        };
+      }
+
+      if (rewriteState.sectionType === "experience" && rewriteState.sectionIndex !== null) {
+        const experience = prev.experiences[rewriteState.sectionIndex];
+
+        if (!experience || rewriteState.bulletIndex === null) {
+          return prev;
+        }
+
+        const newBullets = [...experience.bullets];
+        newBullets[rewriteState.bulletIndex] = rewriteState.rewrittenText;
+
+        return {
+          ...prev,
+          experiences: replaceAtIndex(prev.experiences, rewriteState.sectionIndex, {
+            ...experience,
+            bullets: newBullets,
+          }),
+        };
+      }
+
+      return prev;
+    });
+
+    closeRewriteModal();
+    setNotice({
+      type: "success",
+      message: "已应用改写结果。保存后将生成新版本。",
+    });
+  }, [rewriteState, closeRewriteModal]);
+
+  const saveDraft = useCallback(() => {
     startTransition(() => {
       void (async () => {
         setNotice(null);
@@ -186,18 +371,148 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
         }
       })();
     });
-  }
+  }, [draft, resumeId, currentVersion.id, router]);
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+    <>
+      {rewriteState.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-900">STAR 改写助手</h2>
+              <button
+                type="button"
+                onClick={closeRewriteModal}
+                className="text-sm text-[color:var(--muted)] transition hover:text-slate-900"
+              >
+                关闭
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  原文
+                </label>
+                <textarea
+                  value={rewriteState.originalText}
+                  onChange={(event) =>
+                    setRewriteState((prev) => ({
+                      ...prev,
+                      originalText: event.target.value,
+                    }))
+                  }
+                  rows={3}
+                  className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition focus:border-[color:var(--brand)]"
+                  placeholder="输入你想要改写的段落..."
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  改写风格
+                </label>
+                <div className="flex gap-2">
+                  {(
+                    [
+                      { value: "concise", label: "更简洁" },
+                      { value: "quantitative", label: "更量化" },
+                      { value: "professional", label: "更专业" },
+                    ] as const
+                  ).map((style) => (
+                    <button
+                      key={style.value}
+                      type="button"
+                      onClick={() =>
+                        setRewriteState((prev) => ({
+                          ...prev,
+                          rewriteStyle: style.value,
+                        }))
+                      }
+                      className={cn(
+                        "rounded-full border px-4 py-2 text-sm font-medium transition",
+                        rewriteState.rewriteStyle === style.value
+                          ? "border-[color:var(--brand)] bg-[color:var(--brand)] text-white"
+                          : "border-[color:var(--border)] text-[color:var(--muted)] hover:border-[color:var(--brand)]",
+                      )}
+                    >
+                      {style.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleRewrite}
+                disabled={!rewriteState.originalText.trim() || isRewriting}
+                className="w-full rounded-full bg-[color:var(--brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isRewriting ? "改写中..." : "改写"}
+              </button>
+
+              {rewriteState.rewrittenText && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      改写结果
+                    </label>
+                    <textarea
+                      value={rewriteState.rewrittenText}
+                      onChange={(event) =>
+                        setRewriteState((prev) => ({
+                          ...prev,
+                          rewrittenText: event.target.value,
+                        }))
+                      }
+                      rows={3}
+                      className="w-full rounded-2xl border border-[color:var(--brand)] bg-[color:var(--brand-soft)] px-4 py-3 text-sm leading-6 text-slate-900 outline-none"
+                    />
+                  </div>
+                  {rewriteState.explanation && (
+                    <p className="text-xs text-[color:var(--muted)]">
+                      {rewriteState.explanation}
+                    </p>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={applyRewrite}
+                      className="flex-1 rounded-full bg-[color:var(--brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)]"
+                    >
+                      应用改写
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setRewriteState((prev) => ({
+                          ...prev,
+                          rewrittenText: "",
+                          changeType: null,
+                          explanation: "",
+                        }))
+                      }
+                      className="flex-1 rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
+                    >
+                      重新改写
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
       <div className="space-y-6">
         {notice ? (
           <div
             className={cn(
               "rounded-3xl border px-5 py-4 text-sm leading-6",
               notice.type === "success"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                : "border-rose-200 bg-rose-50 text-rose-700",
+                ? "border-[color:var(--brand)] bg-[color:var(--brand-soft)] text-[color:var(--brand)]"
+                : "border-[color:var(--error)] bg-[color:var(--error-soft)] text-[color:var(--error)]",
             )}
           >
             {notice.message}
@@ -230,7 +545,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
               type="button"
               onClick={saveDraft}
               disabled={isPending}
-              className="inline-flex rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex rounded-full bg-[color:var(--brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isPending ? "正在保存..." : "保存为新版本"}
             </button>
@@ -603,6 +918,29 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                   className={`mt-4 ${textareaClassName}`}
                 />
 
+                {project.bullets.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {project.bullets.map((bullet, bulletIndex) => (
+                      <button
+                        key={`${bullet}-${bulletIndex}`}
+                        type="button"
+                        onClick={() =>
+                          openRewriteModal(
+                            "project",
+                            index,
+                            bulletIndex,
+                            bullet,
+                            `${project.name} - ${project.role}`,
+                          )
+                        }
+                        className="inline-flex rounded-full border border-[color:var(--brand)] bg-[color:var(--brand-soft)] px-3 py-1 text-xs font-medium text-[color:var(--brand)] transition hover:bg-[color:var(--brand)] hover:text-white"
+                      >
+                        改写第 {bulletIndex + 1} 条
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 <button
                   type="button"
                   onClick={() =>
@@ -715,7 +1053,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                       experiences: [...prev.experiences, createExperienceItem()],
                     }))
                   }
-                  className="text-sm font-medium text-[color:var(--accent)]"
+                  className="text-sm font-medium text-[color:var(--brand)]"
                 >
                   新增
                 </button>
@@ -799,6 +1137,30 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                       placeholder="工作要点，每行一条"
                       className={`mt-4 ${textareaClassName}`}
                     />
+
+                    {experience.bullets.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {experience.bullets.map((bullet, bulletIndex) => (
+                          <button
+                            key={`${bullet}-${bulletIndex}`}
+                            type="button"
+                            onClick={() =>
+                              openRewriteModal(
+                                "experience",
+                                index,
+                                bulletIndex,
+                                bullet,
+                                `${experience.company} - ${experience.role}`,
+                              )
+                            }
+                            className="inline-flex rounded-full border border-[color:var(--brand)] bg-[color:var(--brand-soft)] px-3 py-1 text-xs font-medium text-[color:var(--brand)] transition hover:bg-[color:var(--brand)] hover:text-white"
+                          >
+                            改写第 {bulletIndex + 1} 条
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     <button
                       type="button"
                       onClick={() =>
@@ -827,7 +1189,7 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
                       awards: [...prev.awards, createAwardItem()],
                     }))
                   }
-                  className="text-sm font-medium text-[color:var(--accent)]"
+                  className="text-sm font-medium text-[color:var(--brand)]"
                 >
                   新增
                 </button>
@@ -962,5 +1324,6 @@ export function ResumeEditor({ resumeId, initialVersion }: ResumeEditorProps) {
         </SectionCard>
       </div>
     </div>
+    </>
   );
 }
