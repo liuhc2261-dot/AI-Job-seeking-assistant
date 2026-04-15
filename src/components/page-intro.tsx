@@ -16,10 +16,10 @@ export function PageIntro({
   meta,
 }: PageIntroProps) {
   return (
-    <section className="relative overflow-hidden rounded-[32px] border border-[color:var(--border-strong)] bg-[linear-gradient(135deg,rgba(255,253,248,0.98),rgba(244,235,220,0.92))] p-6 shadow-[0_30px_100px_-58px_rgba(24,35,32,0.34)] sm:p-8">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(15,106,111,0.18),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(183,111,60,0.16),transparent_24%)]" />
+    <section className="relative overflow-hidden rounded-[32px] border border-[color:var(--border-strong)] bg-[linear-gradient(135deg,rgba(255,253,248,0.98),rgba(244,235,220,0.92))] p-6 shadow-[0_4px_24px_rgba(0,0,0,0.05)] sm:p-8">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(201,100,66,0.12),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(94,93,89,0.08),transparent_24%)]" />
       <div className="relative space-y-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[color:var(--accent)]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[color:var(--brand)]">
           {eyebrow}
         </p>
         <div className="space-y-3">

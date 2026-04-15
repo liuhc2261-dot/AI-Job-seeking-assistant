@@ -36,6 +36,17 @@ export const diagnosisApplyRequestSchema = z.object({
   suggestionIds: z.array(z.string().trim().min(1)).min(1).max(10),
 });
 
+export const paragraphRewriteRequestSchema = z.object({
+  sectionType: z.enum(["project", "experience", "education"]),
+  sectionIndex: z.number().int().min(0).max(50),
+  bulletIndex: z.number().int().min(0).max(50),
+  originalText: z.string().trim().min(1).max(500),
+  context: z.string().trim().min(1).max(200),
+  rewriteStyle: z.enum(["concise", "quantitative", "professional"]),
+});
+
+export type ParagraphRewriteRequest = z.infer<typeof paragraphRewriteRequestSchema>;
+
 export type ResumeGenerationRequest = z.infer<
   typeof resumeGenerationRequestSchema
 >;

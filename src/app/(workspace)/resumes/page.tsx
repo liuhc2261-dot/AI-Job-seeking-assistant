@@ -26,14 +26,14 @@ export default async function ResumesPage() {
           <>
             <Link
               href="/profile"
-              className="rounded-full border border-[color:var(--border-strong)] px-5 py-3 text-sm font-semibold text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+              className="rounded-full border border-[color:var(--border-strong)] px-5 py-3 text-sm font-semibold text-[color:var(--foreground)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
             >
               回到资料建档
             </Link>
             {hub.resumes[0] ? (
               <Link
                 href={`/resumes/${hub.resumes[0].id}`}
-                className="rounded-full bg-[linear-gradient(135deg,var(--accent),var(--accent-strong))] px-5 py-3 text-sm font-semibold text-white transition hover:shadow-[0_18px_34px_-18px_rgba(15,106,111,0.7)]"
+                className="rounded-full bg-[linear-gradient(135deg,var(--brand),var(--brand-hover))] px-5 py-3 text-sm font-semibold text-white transition hover:shadow-[0_18px_34px_-18px_rgba(201,100,66,0.7)]"
               >
                 打开最近简历
               </Link>

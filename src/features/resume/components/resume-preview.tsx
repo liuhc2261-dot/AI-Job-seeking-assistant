@@ -11,7 +11,7 @@ function renderRange(startDate: string, endDate: string) {
 function SectionTitle({ title }: { title: string }) {
   return (
     <div className="border-b border-[color:var(--border)] pb-2">
-      <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-[color:var(--accent)]">
+      <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-[color:var(--brand)]">
         {title}
       </h3>
     </div>
@@ -27,7 +27,7 @@ function BulletList({ items }: { items: string[] }) {
     <ul className="space-y-1.5">
       {items.map((item) => (
         <li key={item} className="flex gap-2">
-          <span className="mt-[7px] h-1.5 w-1.5 rounded-full bg-[color:var(--accent)]" />
+          <span className="mt-[7px] h-1.5 w-1.5 rounded-full bg-[color:var(--brand)]" />
           <span className="flex-1">{item}</span>
         </li>
       ))}
@@ -53,7 +53,7 @@ export function ResumePreview({ content }: ResumePreviewProps) {
               {content.basic.name || "未命名简历"}
             </h2>
             {content.basic.targetRole ? (
-              <p className="mt-2 text-sm font-medium text-[color:var(--accent)]">
+              <p className="mt-2 text-sm font-medium text-[color:var(--brand)]">
                 {content.basic.targetRole}
               </p>
             ) : null}

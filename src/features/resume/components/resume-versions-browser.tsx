@@ -326,8 +326,8 @@ export function ResumeVersionsBrowser({
           className={cn(
             "rounded-3xl border px-5 py-4 text-sm leading-6",
             notice.type === "success"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border-rose-200 bg-rose-50 text-rose-700",
+              ? "border-[color:var(--brand)] bg-[color:var(--brand-soft)] text-[color:var(--brand)]"
+              : "border-[color:var(--error)] bg-[color:var(--error-soft)] text-[color:var(--error)]",
           )}
         >
           {notice.message}
@@ -394,7 +394,7 @@ export function ResumeVersionsBrowser({
                     value={renameValue}
                     onChange={(event) => setRenameValue(event.target.value)}
                     disabled={isPending}
-                    className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm outline-none transition focus:border-[color:var(--accent)]"
+                    className="w-full rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm outline-none transition focus:border-[color:var(--brand)]"
                   />
                 </label>
                 <div className="flex flex-wrap gap-3">
@@ -402,7 +402,7 @@ export function ResumeVersionsBrowser({
                     type="button"
                     onClick={handleRename}
                     disabled={isPending}
-                    className="inline-flex rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex rounded-full bg-[color:var(--brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {pendingAction === "rename" ? "保存中..." : "保存新名称"}
                   </button>
@@ -410,7 +410,7 @@ export function ResumeVersionsBrowser({
                     type="button"
                     onClick={cancelRename}
                     disabled={isPending}
-                    className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     取消
                   </button>
@@ -422,7 +422,7 @@ export function ResumeVersionsBrowser({
                   type="button"
                   onClick={handleCopy}
                   disabled={!canCopy}
-                  className="inline-flex rounded-full border border-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-[color:var(--accent)] transition hover:bg-[color:var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex rounded-full border border-[color:var(--brand)] px-5 py-3 text-sm font-semibold text-[color:var(--brand)] transition hover:bg-[color:var(--brand-soft)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {pendingAction === "copy" ? "创建中..." : "创建副本"}
                 </button>
@@ -430,7 +430,7 @@ export function ResumeVersionsBrowser({
                   type="button"
                   onClick={handleRollback}
                   disabled={!canRollback}
-                  className="inline-flex rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex rounded-full bg-[color:var(--brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {pendingAction === "rollback"
                     ? "回滚中..."
@@ -442,7 +442,7 @@ export function ResumeVersionsBrowser({
                   type="button"
                   onClick={startRename}
                   disabled={isPending}
-                  className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   重命名
                 </button>
@@ -450,7 +450,7 @@ export function ResumeVersionsBrowser({
                   type="button"
                   onClick={handleDelete}
                   disabled={!canDelete}
-                  className="inline-flex rounded-full border border-rose-200 px-5 py-3 text-sm font-medium text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex rounded-full border border-[color:var(--error)] px-5 py-3 text-sm font-medium text-[color:var(--error)] transition hover:bg-[color:var(--error-soft)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {pendingAction === "delete" ? "删除中..." : "删除版本"}
                 </button>

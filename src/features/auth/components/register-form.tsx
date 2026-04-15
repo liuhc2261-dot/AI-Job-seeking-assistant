@@ -140,10 +140,10 @@ export function RegisterForm() {
           type="email"
           defaultValue={state.email}
           placeholder="school@example.com"
-          className="w-full rounded-2xl border border-[color:var(--border)] bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[color:var(--accent)]"
+          className="w-full rounded-2xl border border-[color:var(--border)] bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[color:var(--brand)]"
         />
         {state.fieldErrors?.email?.[0] ? (
-          <p className="text-sm text-rose-600">{state.fieldErrors.email[0]}</p>
+          <p className="text-sm text-[color:var(--error)]">{state.fieldErrors.email[0]}</p>
         ) : null}
       </div>
 
@@ -156,10 +156,10 @@ export function RegisterForm() {
           name="password"
           type="password"
           placeholder="至少 8 位"
-          className="w-full rounded-2xl border border-[color:var(--border)] bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[color:var(--accent)]"
+          className="w-full rounded-2xl border border-[color:var(--border)] bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[color:var(--brand)]"
         />
         {state.fieldErrors?.password?.[0] ? (
-          <p className="text-sm text-rose-600">
+          <p className="text-sm text-[color:var(--error)]">
             {state.fieldErrors.password[0]}
           </p>
         ) : null}
@@ -174,17 +174,17 @@ export function RegisterForm() {
           name="confirmPassword"
           type="password"
           placeholder="再次输入密码"
-          className="w-full rounded-2xl border border-[color:var(--border)] bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[color:var(--accent)]"
+          className="w-full rounded-2xl border border-[color:var(--border)] bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[color:var(--brand)]"
         />
         {state.fieldErrors?.confirmPassword?.[0] ? (
-          <p className="text-sm text-rose-600">
+          <p className="text-sm text-[color:var(--error)]">
             {state.fieldErrors.confirmPassword[0]}
           </p>
         ) : null}
       </div>
 
       {state.message ? (
-        <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <p className="rounded-2xl border border-[color:var(--error)] bg-[color:var(--error-soft)] px-4 py-3 text-sm text-[color:var(--error)]">
           {state.message}
         </p>
       ) : null}
@@ -192,14 +192,14 @@ export function RegisterForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="w-full rounded-full bg-[color:var(--accent)] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-70"
+        className="w-full rounded-full bg-[color:var(--brand)] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-70"
       >
         {isPending ? "创建中..." : "创建账号并开始建档"}
       </button>
 
       <p className="text-sm text-[color:var(--muted)]">
         已有账号？
-        <Link href="/login" className="ml-1 font-medium text-[color:var(--accent)]">
+        <Link href="/login" className="ml-1 font-medium text-[color:var(--brand)]">
           去登录
         </Link>
       </p>

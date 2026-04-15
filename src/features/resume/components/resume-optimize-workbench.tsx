@@ -225,8 +225,8 @@ export function ResumeOptimizeWorkbench({
           className={cn(
             "rounded-3xl border px-5 py-4 text-sm leading-6",
             notice.type === "success"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border-rose-200 bg-rose-50 text-rose-700",
+              ? "border-[color:var(--brand)] bg-[color:var(--brand-soft)] text-[color:var(--brand)]"
+              : "border-[color:var(--error)] bg-[color:var(--error-soft)] text-[color:var(--error)]",
           )}
         >
           {notice.message}
@@ -276,13 +276,13 @@ export function ResumeOptimizeWorkbench({
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
                 href={`/resumes/${resumeId}/edit`}
-                className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
               >
                 先去编辑源版本
               </Link>
               <Link
                 href={`/resumes/${resumeId}/versions`}
-                className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
               >
                 查看所有版本
               </Link>
@@ -298,14 +298,14 @@ export function ResumeOptimizeWorkbench({
               onChange={(event) => setJdText(event.target.value)}
               rows={16}
               placeholder="请粘贴完整 JD 文本..."
-              className="w-full rounded-3xl border border-[color:var(--border)] bg-white px-4 py-4 text-sm leading-6 outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent-soft-strong)]"
+              className="w-full rounded-3xl border border-[color:var(--border)] bg-white px-4 py-4 text-sm leading-6 outline-none transition focus:border-[color:var(--brand)] focus:ring-2 focus:ring-[color:var(--brand-soft-strong)]"
             />
             <div className="mt-4 flex flex-wrap gap-3">
               <button
                 type="button"
                 onClick={handleParseJd}
                 disabled={isParsing}
-                className="inline-flex rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex rounded-full bg-[color:var(--brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isParsing ? "解析中..." : "解析 JD"}
               </button>
@@ -313,7 +313,7 @@ export function ResumeOptimizeWorkbench({
                 type="button"
                 onClick={handleOptimize}
                 disabled={!analysis || isOptimizing}
-                className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-semibold text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-semibold text-[color:var(--muted)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isOptimizing ? "生成中..." : "生成岗位版本"}
               </button>
@@ -359,7 +359,7 @@ export function ResumeOptimizeWorkbench({
                         analysis.parsedKeywords.map((keyword) => (
                           <span
                             key={keyword}
-                            className="rounded-full bg-[color:var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--accent)]"
+                            className="rounded-full bg-[color:var(--brand-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--brand)]"
                           >
                             {keyword}
                           </span>
@@ -440,7 +440,7 @@ export function ResumeOptimizeWorkbench({
           >
             {generatedVersion ? (
               <div className="space-y-4">
-                <div className="rounded-2xl bg-[color:var(--accent-soft)] px-4 py-4">
+                <div className="rounded-2xl bg-[color:var(--brand-soft)] px-4 py-4">
                   <p className="font-medium">{generatedVersion.versionName}</p>
                   <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
                     {generatedVersion.changeSummary?.generationSummary ?? "当前岗位版本已经生成。"}
@@ -480,7 +480,7 @@ export function ResumeOptimizeWorkbench({
                   </p>
                 </div>
                 {version.jobTargetTitle ? (
-                  <span className="rounded-full bg-[color:var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--accent)]">
+                  <span className="rounded-full bg-[color:var(--brand-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--brand)]">
                     {version.jobTargetTitle}
                   </span>
                 ) : null}

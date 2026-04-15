@@ -77,10 +77,10 @@ export function LoginForm() {
           type="email"
           defaultValue={state.email}
           placeholder="you@example.com"
-          className="w-full rounded-2xl border border-[color:var(--border)] bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[color:var(--accent)]"
+          className="w-full rounded-2xl border border-[color:var(--border)] bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[color:var(--brand)]"
         />
         {state.fieldErrors?.email?.[0] ? (
-          <p className="text-sm text-rose-600">{state.fieldErrors.email[0]}</p>
+          <p className="text-sm text-[color:var(--error)]">{state.fieldErrors.email[0]}</p>
         ) : null}
       </div>
 
@@ -93,22 +93,22 @@ export function LoginForm() {
           name="password"
           type="password"
           placeholder="至少 8 位"
-          className="w-full rounded-2xl border border-[color:var(--border)] bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[color:var(--accent)]"
+          className="w-full rounded-2xl border border-[color:var(--border)] bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[color:var(--brand)]"
         />
         {state.fieldErrors?.password?.[0] ? (
-          <p className="text-sm text-rose-600">
+          <p className="text-sm text-[color:var(--error)]">
             {state.fieldErrors.password[0]}
           </p>
         ) : null}
         <p className="text-right text-sm">
-          <Link href="/forgot-password" className="font-medium text-[color:var(--accent)]">
+          <Link href="/forgot-password" className="font-medium text-[color:var(--brand)]">
             忘记密码？
           </Link>
         </p>
       </div>
 
       {state.message ? (
-        <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <p className="rounded-2xl border border-[color:var(--error)] bg-[color:var(--error-soft)] px-4 py-3 text-sm text-[color:var(--error)]">
           {state.message}
         </p>
       ) : null}
@@ -116,14 +116,14 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="w-full rounded-full bg-[color:var(--accent)] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-70"
+        className="w-full rounded-full bg-[color:var(--brand)] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-70"
       >
         {isPending ? "登录中..." : "登录并进入工作台"}
       </button>
 
       <p className="text-sm text-[color:var(--muted)]">
         还没有账号？
-        <Link href="/register" className="ml-1 font-medium text-[color:var(--accent)]">
+        <Link href="/register" className="ml-1 font-medium text-[color:var(--brand)]">
           去注册
         </Link>
       </p>

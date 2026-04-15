@@ -106,15 +106,109 @@ function getExportStatusLabel(status: ResumeExportRecord["status"]) {
 }
 
 function getTemplatePresentation(template: ExportTemplate) {
-  if (template.id === "ats-standard") {
-    return {
+  const presentations: Record<string, { name: string; description: string; recommendedFor: string; preview: string }> = {
+    "ats-standard": {
       name: "标准 ATS 模板",
       description: "单栏、清晰、稳健，优先保证中文排版和 ATS 可读性。",
       recommendedFor: "校招 / 实习 / 通用岗位",
-    };
+      preview: "single-col",
+    },
+    "clean-tech": {
+      name: "简洁技术岗模板",
+      description: "极简等宽字体风格，强调技术栈和项目细节，适合互联网技术岗位。",
+      recommendedFor: "技术岗 / 研发 / 算法 / 后端",
+      preview: "clean-tech",
+    },
+    creative: {
+      name: "创意双栏模板",
+      description: "左右双栏布局，左侧彩色边栏展示联系人和技能，视觉层次丰富。",
+      recommendedFor: "设计 / 产品 / 运营 / 创意类",
+      preview: "dual-col",
+    },
+  };
+
+  return presentations[template.id] ?? { ...template, preview: "single-col" };
+}
+
+function TemplatePreview({ type }: { type: string }) {
+  if (type === "clean-tech") {
+    return (
+      <div className="flex flex-col gap-1 rounded-lg border border-[color:var(--border)] bg-white p-3 font-mono text-[9px]">
+        <div className="border-b border-[color:var(--border)] pb-1">
+          <div className="font-bold text-[color:var(--foreground)]">王小明</div>
+          <div className="text-[color:var(--muted)]">前端开发工程师</div>
+          <div className="mt-1 flex gap-2 text-[color:var(--muted)]">
+            <span>138****0000</span>
+            <span>wang@example.com</span>
+          </div>
+        </div>
+        <div className="mt-1 text-[8px] uppercase tracking-wider text-[color:var(--muted)]">项目经历</div>
+        <div className="flex justify-between">
+          <span className="font-semibold text-[color:var(--foreground)]">企业管理系统</span>
+          <span className="text-[color:var(--muted)]">2022.07 - 2023.12</span>
+        </div>
+        <div className="text-[color:var(--muted)]">React / TypeScript / Node.js</div>
+        <div className="ml-2 text-[color:var(--muted)]">· 负责前端架构设计</div>
+      </div>
+    );
   }
 
-  return template;
+  if (type === "dual-col") {
+    return (
+      <div className="flex gap-0 rounded-lg border border-[color:var(--border)] overflow-hidden text-[8px]">
+        <div className="w-1/3 bg-[color:var(--foreground)] p-2 text-white">
+          <div className="font-bold">王小明</div>
+          <div className="mt-1 text-[7px] uppercase tracking-wider opacity-60">前端工程师</div>
+          <div className="mt-2 space-y-1 text-[7px] opacity-80">
+            <div>138****0000</div>
+            <div>wang@example.com</div>
+            <div>北京</div>
+          </div>
+          <div className="mt-2 text-[7px] uppercase tracking-wider opacity-60">技能</div>
+          <div className="mt-1 flex flex-wrap gap-0.5">
+            {["React", "Vue", "TS"].map((s) => (
+              <span key={s} className="rounded-sm bg-white/20 px-1 text-white">{s}</span>
+            ))}
+          </div>
+        </div>
+        <div className="flex-1 bg-white p-2">
+          <div className="border-l-2 border-blue-500 pl-2 text-[9px] font-bold text-[color:var(--foreground)]">项目经历</div>
+          <div className="mt-1">
+            <div className="flex justify-between">
+              <span className="font-semibold">企业管理系统</span>
+              <span className="text-[color:var(--muted)]">2022.07</span>
+            </div>
+            <div className="text-[7px] text-blue-500">React / TypeScript</div>
+            <div className="mt-0.5 text-[color:var(--muted)]">· 负责前端架构设计</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Default: ats-standard
+  return (
+    <div className="flex flex-col gap-1 rounded-lg border border-[color:var(--border)] bg-white p-3 text-[9px]">
+      <div className="border-b border-[color:var(--border)] pb-1">
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="font-bold text-[color:var(--foreground)]">王小明</div>
+            <div className="text-[color:var(--muted)]">目标岗位：前端开发工程师</div>
+          </div>
+          <div className="text-right text-[color:var(--muted)]">
+            <div>138****0000</div>
+            <div>wang@example.com</div>
+          </div>
+        </div>
+      </div>
+      <div className="text-[8px] uppercase tracking-wider text-[color:var(--muted)]">项目经历</div>
+      <div className="flex justify-between border-b border-dashed border-[color:var(--border)] pb-1">
+        <span className="font-semibold text-[color:var(--foreground)]">企业管理系统</span>
+        <span className="text-[color:var(--muted)]">2022.07 - 2023.12</span>
+      </div>
+      <div className="ml-2 text-[color:var(--muted)]">· 负责前端架构设计</div>
+    </div>
+  );
 }
 
 function getFormatPresentation(format: ExportFormatOption) {
@@ -321,8 +415,8 @@ export function ResumeExportCenter({
           className={cn(
             "rounded-3xl border px-5 py-4 text-sm leading-6",
             notice.type === "success"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border-rose-200 bg-rose-50 text-rose-700",
+              ? "border-[color:var(--brand)] bg-[color:var(--brand-soft)] text-[color:var(--brand)]"
+              : "border-[color:var(--error)] bg-[color:var(--error-soft)] text-[color:var(--error)]",
           )}
         >
           {notice.message}
@@ -396,7 +490,7 @@ export function ResumeExportCenter({
               </div>
 
               {selectedVersion ? (
-                <div className="rounded-2xl bg-[color:var(--accent-soft)] px-4 py-4 text-sm leading-6">
+                <div className="rounded-2xl bg-[color:var(--brand-soft)] px-4 py-4 text-sm leading-6">
                   <p className="font-medium">{selectedVersion.versionName}</p>
                   <p className="mt-2 text-[color:var(--muted)]">
                     版本类型：{getVersionTypeLabel(selectedVersion.versionType)}
@@ -442,7 +536,7 @@ export function ResumeExportCenter({
                   type="button"
                   onClick={() => handleExport("markdown")}
                   disabled={!selectedVersion || isPending}
-                  className="inline-flex rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex rounded-full bg-[color:var(--brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {pendingFormat === "markdown" ? "导出 Markdown..." : "导出 Markdown"}
                 </button>
@@ -450,13 +544,13 @@ export function ResumeExportCenter({
                   type="button"
                   onClick={() => handleExport("pdf")}
                   disabled={!selectedVersion || isPending}
-                  className="inline-flex rounded-full border border-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-[color:var(--accent)] transition hover:bg-[color:var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex rounded-full border border-[color:var(--brand)] px-5 py-3 text-sm font-semibold text-[color:var(--brand)] transition hover:bg-[color:var(--brand-soft)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {pendingFormat === "pdf" ? "生成 PDF..." : "导出 PDF"}
                 </button>
                 <Link
                   href={`/resumes/${resumeId}/versions`}
-                  className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                  className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
                 >
                   查看版本链
                 </Link>
@@ -478,7 +572,7 @@ export function ResumeExportCenter({
                     className={cn(
                       "rounded-2xl border px-4 py-4",
                       format.available
-                        ? "border-emerald-200 bg-emerald-50"
+                        ? "border-[color:var(--brand)] bg-[color:var(--brand-soft)]"
                         : "border-[color:var(--border)] bg-[color:var(--surface-strong)]",
                     )}
                   >
@@ -488,7 +582,7 @@ export function ResumeExportCenter({
                         className={cn(
                           "rounded-full px-3 py-1 text-xs font-semibold",
                           format.available
-                            ? "bg-emerald-100 text-emerald-700"
+                            ? "bg-[color:var(--brand-soft)] text-[color:var(--brand)]"
                             : "bg-amber-100 text-amber-700",
                         )}
                       >
@@ -507,26 +601,45 @@ export function ResumeExportCenter({
 
         <div className="space-y-6">
           <SectionCard
-            title="稳定模板"
-            description="当前只保留一套稳定的 ATS 模板，用同一份结构化数据渲染 HTML，再交给服务端生成 PDF。"
+            title="PDF 模板"
+            description="选择模板后导出，3 种风格适配不同岗位类型。"
           >
-            <div className="grid gap-4">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {templates.map((template) => {
                 const presentation = getTemplatePresentation(template);
+                const isSelected = selectedTemplateId === template.id;
 
                 return (
-                  <div
+                  <button
                     key={template.id}
-                    className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-4"
+                    type="button"
+                    onClick={() => setSelectedTemplateId(template.id)}
+                    className={`rounded-2xl border text-left transition-all ${
+                      isSelected
+                        ? "border-[color:var(--brand)] ring-2 ring-[color:var(--brand)] ring-offset-1"
+                        : "border-[color:var(--border)] hover:border-[color:var(--brand)]"
+                    }`}
                   >
-                    <p className="font-medium">{presentation.name}</p>
-                    <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
-                      {presentation.description}
-                    </p>
-                    <p className="mt-3 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--muted)]">
-                      {presentation.recommendedFor}
-                    </p>
-                  </div>
+                    <div className="p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-medium text-sm">{presentation.name}</p>
+                        {isSelected && (
+                          <span className="rounded-full bg-[color:var(--brand)] px-2 py-0.5 text-[10px] font-semibold text-white">
+                            已选
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-2">
+                        <TemplatePreview type={presentation.preview} />
+                      </div>
+                      <p className="mt-2 text-[10px] leading-5 text-[color:var(--muted)]">
+                        {presentation.description}
+                      </p>
+                      <p className="mt-1 text-[9px] font-medium uppercase tracking-[0.1em] text-[color:var(--muted)]">
+                        {presentation.recommendedFor}
+                      </p>
+                    </div>
+                  </button>
                 );
               })}
             </div>
@@ -554,9 +667,9 @@ export function ResumeExportCenter({
                         className={cn(
                           "rounded-full px-3 py-1 text-xs font-semibold",
                           record.status === "success"
-                            ? "bg-emerald-100 text-emerald-700"
+                            ? "bg-[color:var(--brand-soft)] text-[color:var(--brand)]"
                             : record.status === "failed"
-                              ? "bg-rose-100 text-rose-700"
+                              ? "bg-[color:var(--error-soft)] text-[color:var(--error)]"
                               : "bg-amber-100 text-amber-700",
                         )}
                       >
@@ -574,7 +687,7 @@ export function ResumeExportCenter({
                       {record.fileUrl ? (
                         <a
                           href={record.fileUrl}
-                          className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                          className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
                         >
                           重新下载
                         </a>
@@ -585,7 +698,7 @@ export function ResumeExportCenter({
                           type="button"
                           onClick={() => handleRetry(record)}
                           disabled={isPending}
-                          className="inline-flex rounded-full bg-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                          className="inline-flex rounded-full bg-[color:var(--brand)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {retryingExportId === record.id ? "重试导出中..." : "重试导出"}
                         </button>

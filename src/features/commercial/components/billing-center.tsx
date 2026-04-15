@@ -29,10 +29,10 @@ type CheckoutResponse = {
 };
 
 const primaryButtonClassName =
-  "inline-flex items-center justify-center rounded-full bg-[color:var(--accent)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center justify-center rounded-full bg-[color:var(--brand)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60";
 
 const secondaryButtonClassName =
-  "inline-flex items-center justify-center rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)] disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center justify-center rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)] disabled:cursor-not-allowed disabled:opacity-60";
 
 function formatAmount(amountCents: number, currency = "CNY") {
   return new Intl.NumberFormat("zh-CN", {
@@ -192,7 +192,7 @@ function renderPaymentPanel(session: CommercePaymentSession | null) {
             href={session.paymentUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex text-sm font-medium text-[color:var(--accent)] underline-offset-4 hover:underline"
+            className="inline-flex text-sm font-medium text-[color:var(--brand)] underline-offset-4 hover:underline"
           >
             单独打开支付链接
           </a>
@@ -258,8 +258,8 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
             <div
               className={`mt-4 rounded-2xl px-4 py-3 text-sm ${
                 error
-                  ? "border border-rose-200 bg-rose-50 text-rose-700"
-                  : "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                  ? "border border-[color:var(--error)] bg-[color:var(--error-soft)] text-[color:var(--error)]"
+                  : "border border-[color:var(--brand)] bg-[color:var(--brand-soft)] text-[color:var(--brand)]"
               }`}
             >
               {error ?? notice}
@@ -283,7 +283,7 @@ export function BillingCenter({ overview, canMockConfirm }: BillingCenterProps) 
                   type="button"
                   className={`rounded-2xl border px-4 py-4 text-left transition ${
                     selected
-                      ? "border-[color:var(--accent)] bg-[color:var(--accent-soft)]"
+                      ? "border-[color:var(--brand)] bg-[color:var(--brand-soft)]"
                       : "border-[color:var(--border)] bg-[color:var(--surface-strong)]"
                   }`}
                   onClick={() => {

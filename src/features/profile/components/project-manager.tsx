@@ -117,7 +117,7 @@ export function ProjectManager({
                       {project.role} · {formatMonthRange(project.startDate, project.endDate)}
                     </p>
                     {project.sourceType ? (
-                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
+                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--brand)]">
                         {project.sourceType}
                       </p>
                     ) : null}

@@ -57,7 +57,7 @@ export function ResumeVersionTimeline({
           className={cn(
             "rounded-[26px] border px-4 py-4 transition",
             version.id === currentVersionId
-              ? "border-[color:var(--accent-soft-strong)] bg-[linear-gradient(180deg,rgba(15,106,111,0.14),rgba(255,255,255,0.9))] shadow-[0_20px_44px_-34px_rgba(15,106,111,0.7)]"
+              ? "border-[color:var(--brand-soft-strong)] bg-[linear-gradient(180deg,rgba(201,100,66,0.14),rgba(255,255,255,0.9))] shadow-[0_20px_44px_-34px_rgba(201,100,66,0.7)]"
               : "border-[color:var(--border)] bg-white/76",
           )}
         >
@@ -71,11 +71,11 @@ export function ResumeVersionTimeline({
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-[color:var(--accent)]">
+              <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-[color:var(--brand)]">
                 {getVersionTypeLabel(version.versionType)}
               </span>
               {version.id === currentVersionId ? (
-                <span className="rounded-full bg-[color:var(--accent)] px-3 py-1 text-xs font-semibold text-white">
+                <span className="rounded-full bg-[color:var(--brand)] px-3 py-1 text-xs font-semibold text-white">
                   当前版本
                 </span>
               ) : null}

@@ -4,13 +4,13 @@ import { cn } from "@/lib/utils";
 import type { ProfileSnapshot } from "@/types/profile";
 
 export const primaryButtonClassName =
-  "inline-flex items-center justify-center rounded-full bg-[color:var(--accent)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center justify-center rounded-full bg-[color:var(--brand)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60";
 
 export const secondaryButtonClassName =
-  "inline-flex items-center justify-center rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)] disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center justify-center rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)] disabled:cursor-not-allowed disabled:opacity-60";
 
 export const dangerButtonClassName =
-  "inline-flex items-center justify-center rounded-full border border-rose-200 px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center justify-center rounded-full border border-[color:var(--error)] px-4 py-2 text-sm font-medium text-[color:var(--error)] transition hover:bg-[color:var(--error-soft)] disabled:cursor-not-allowed disabled:opacity-60";
 
 export async function readApiPayload(response: Response) {
   const payload = await response.json().catch(() => null);
@@ -41,7 +41,7 @@ export function FormField({
     <label className="space-y-2">
       <span className="text-sm font-medium text-[color:var(--foreground)]">
         {label}
-        {required ? <span className="ml-1 text-[color:var(--accent)]">*</span> : null}
+        {required ? <span className="ml-1 text-[color:var(--brand)]">*</span> : null}
       </span>
       {children}
       {hint ? (
@@ -58,7 +58,7 @@ export function TextInput(
     <input
       {...props}
       className={cn(
-        "w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-3 text-sm outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent-soft)]",
+        "w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-3 text-sm outline-none transition focus:border-[color:var(--brand)] focus:ring-2 focus:ring-[color:var(--brand-soft)]",
         props.className,
       )}
     />
@@ -72,7 +72,7 @@ export function TextArea(
     <textarea
       {...props}
       className={cn(
-        "min-h-28 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-3 text-sm outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent-soft)]",
+        "min-h-28 w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-3 text-sm outline-none transition focus:border-[color:var(--brand)] focus:ring-2 focus:ring-[color:var(--brand-soft)]",
         props.className,
       )}
     />

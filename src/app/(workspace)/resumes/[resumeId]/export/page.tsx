@@ -40,13 +40,13 @@ export default async function ResumeExportPage({ params }: ResumePageProps) {
           <>
             <Link
               href={`/resumes/${resumeId}/versions`}
-              className="inline-flex rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
+              className="inline-flex rounded-full bg-[color:var(--brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)]"
             >
               先挑选版本
             </Link>
             <Link
               href={`/resumes/${resumeId}/diagnose`}
-              className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+              className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
             >
               返回诊断
             </Link>

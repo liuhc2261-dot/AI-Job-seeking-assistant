@@ -48,7 +48,7 @@ export function AppShell({ user, children }: AppShellProps) {
     return cn(
       "block rounded-3xl border px-4 py-4 transition",
       isItemActive(item)
-        ? "border-[color:var(--accent-soft-strong)] bg-[linear-gradient(180deg,rgba(15,106,111,0.14),rgba(255,255,255,0.86))] shadow-[0_20px_40px_-34px_rgba(15,106,111,0.7)]"
+        ? "border-[color:var(--border-warm)] bg-[linear-gradient(180deg,rgba(201,100,66,0.1),rgba(255,255,255,0.86))] shadow-[0_20px_40px_-34px_rgba(201,100,66,0.25)]"
         : "border-transparent bg-transparent hover:border-[color:var(--border)] hover:bg-[rgba(255,255,255,0.52)]",
     );
   }
@@ -57,12 +57,12 @@ export function AppShell({ user, children }: AppShellProps) {
     <div className="min-h-screen">
       <UserTelemetrySync user={user} />
       <div className="mx-auto flex min-h-screen max-w-[1580px] gap-5 px-4 py-4 lg:px-6">
-        <aside className="sticky top-4 hidden h-[calc(100vh-2rem)] w-[300px] shrink-0 flex-col overflow-hidden rounded-[32px] border border-[color:var(--border-strong)] bg-[rgba(255,252,247,0.88)] p-5 shadow-[0_28px_90px_-56px_rgba(24,35,32,0.34)] backdrop-blur-xl lg:flex">
+        <aside className="sticky top-4 hidden h-[calc(100vh-2rem)] w-[300px] shrink-0 flex-col overflow-hidden rounded-[32px] border border-[color:var(--border-strong)] bg-[rgba(255,252,247,0.88)] p-5 shadow-[0_4px_24px_rgba(0,0,0,0.05)] backdrop-blur-xl lg:flex">
           <Link
             href="/dashboard"
-            className="rounded-[28px] border border-[color:var(--border-strong)] bg-[linear-gradient(135deg,rgba(15,106,111,0.16),rgba(255,253,248,0.96))] p-5"
+            className="rounded-[28px] border border-[color:var(--border-warm)] bg-[linear-gradient(135deg,rgba(201,100,66,0.1),rgba(255,253,248,0.96))] p-5"
           >
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--accent)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--brand)]">
               Resume Workspace
             </p>
             <h1 className="mt-2 text-xl font-semibold tracking-tight text-[color:var(--foreground)]">
@@ -80,7 +80,7 @@ export function AppShell({ user, children }: AppShellProps) {
             <div className="mt-4 space-y-3">
               {workspaceFlow.map((step, index) => (
                 <div key={step} className="flex items-center gap-3">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[color:var(--accent-soft)] text-xs font-semibold text-[color:var(--accent)]">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[color:var(--brand-soft)] text-xs font-semibold text-[color:var(--brand)]">
                     {index + 1}
                   </span>
                   <span className="text-sm text-[color:var(--muted-strong)]">{step}</span>
@@ -131,7 +131,7 @@ export function AppShell({ user, children }: AppShellProps) {
             </div>
           </div>
 
-          <div className="mt-5 rounded-[28px] border border-[color:var(--border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(248,241,230,0.9))] p-4">
+          <div className="mt-5 rounded-[28px] border border-[color:var(--border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(240,238,230,0.9))] p-4">
             <p className="text-sm font-semibold text-[color:var(--foreground)]">
               {displayName}
             </p>
@@ -145,10 +145,10 @@ export function AppShell({ user, children }: AppShellProps) {
         </aside>
 
         <main className="min-w-0 flex-1 py-1">
-          <div className="mb-5 rounded-[30px] border border-[color:var(--border-strong)] bg-[rgba(255,252,247,0.86)] px-5 py-4 shadow-[0_24px_80px_-56px_rgba(24,35,32,0.34)] backdrop-blur-xl">
+          <div className="mb-5 rounded-[30px] border border-[color:var(--border-strong)] bg-[rgba(255,252,247,0.86)] px-5 py-4 shadow-[0_4px_24px_rgba(0,0,0,0.05)] backdrop-blur-xl">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="space-y-1">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[color:var(--accent)]">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[color:var(--brand)]">
                   当前阶段
                 </p>
                 <p className="text-xl font-semibold tracking-tight text-[color:var(--foreground)]">
@@ -173,7 +173,7 @@ export function AppShell({ user, children }: AppShellProps) {
             </div>
           </div>
 
-          <div className="mb-5 rounded-[30px] border border-[color:var(--border-strong)] bg-[rgba(255,252,247,0.86)] px-4 py-4 shadow-[0_24px_80px_-56px_rgba(24,35,32,0.34)] backdrop-blur-xl lg:hidden">
+          <div className="mb-5 rounded-[30px] border border-[color:var(--border-strong)] bg-[rgba(255,252,247,0.86)] px-4 py-4 shadow-[0_4px_24px_rgba(0,0,0,0.05)] backdrop-blur-xl lg:hidden">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-[color:var(--foreground)]">
@@ -193,7 +193,7 @@ export function AppShell({ user, children }: AppShellProps) {
                   className={cn(
                     "shrink-0 rounded-full border px-3 py-2 text-sm font-medium transition",
                     isItemActive(item)
-                      ? "border-[color:var(--accent)] bg-[color:var(--accent-soft)] text-[color:var(--accent)]"
+                      ? "border-[color:var(--brand)] bg-[color:var(--brand-soft)] text-[color:var(--brand)]"
                       : "border-[color:var(--border)] bg-white/70 text-[color:var(--muted)]",
                   )}
                 >

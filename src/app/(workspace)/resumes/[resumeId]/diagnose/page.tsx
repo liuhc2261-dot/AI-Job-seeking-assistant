@@ -51,13 +51,13 @@ export default async function ResumeDiagnosePage({ params }: ResumePageProps) {
           <>
             <Link
               href={`/resumes/${resumeId}/optimize`}
-              className="inline-flex rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
+              className="inline-flex rounded-full bg-[color:var(--brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)]"
             >
               先做岗位定制
             </Link>
             <Link
               href={`/resumes/${resumeId}/versions`}
-              className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+              className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
             >
               查看版本链
             </Link>

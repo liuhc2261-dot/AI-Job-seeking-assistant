@@ -89,8 +89,8 @@ export function ProfileBuilder({ initialSnapshot }: ProfileBuilderProps) {
           className={cn(
             "rounded-3xl border px-5 py-4 text-sm leading-6",
             notice.type === "success"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border-rose-200 bg-rose-50 text-rose-700",
+              ? "border-[color:var(--brand)] bg-[color:var(--brand-soft)] text-[color:var(--brand)]"
+              : "border-[color:var(--error)] bg-[color:var(--error-soft)] text-[color:var(--error)]",
           )}
         >
           {notice.message}
@@ -116,7 +116,7 @@ export function ProfileBuilder({ initialSnapshot }: ProfileBuilderProps) {
               </div>
               <div className="mt-3 h-3 rounded-full bg-white/70">
                 <div
-                  className="h-full rounded-full bg-[color:var(--accent)] transition-all"
+                  className="h-full rounded-full bg-[color:var(--brand)] transition-all"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -139,7 +139,7 @@ export function ProfileBuilder({ initialSnapshot }: ProfileBuilderProps) {
                         className={cn(
                           "rounded-full px-3 py-1 text-xs font-semibold",
                           completed
-                            ? "bg-emerald-100 text-emerald-700"
+                            ? "bg-[color:var(--brand-soft)] text-[color:var(--brand)]"
                             : "bg-amber-100 text-amber-700",
                         )}
                       >
@@ -174,7 +174,7 @@ export function ProfileBuilder({ initialSnapshot }: ProfileBuilderProps) {
                   className={cn(
                     "rounded-2xl border px-4 py-4",
                     item.accent
-                      ? "border-[color:var(--accent-soft-strong)] bg-[color:var(--accent-soft)]"
+                      ? "border-[color:var(--brand-soft-strong)] bg-[color:var(--brand-soft)]"
                       : "border-[color:var(--border)] bg-white/76",
                   )}
                 >
@@ -182,7 +182,7 @@ export function ProfileBuilder({ initialSnapshot }: ProfileBuilderProps) {
                     className={cn(
                       "text-xs font-semibold uppercase tracking-[0.18em]",
                       item.accent
-                        ? "text-[color:var(--accent)]"
+                        ? "text-[color:var(--brand)]"
                         : "text-[color:var(--muted)]",
                     )}
                   >
@@ -228,7 +228,7 @@ export function ProfileBuilder({ initialSnapshot }: ProfileBuilderProps) {
                     .join("、")}
                 </div>
               ) : (
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm leading-6 text-emerald-700">
+                <div className="rounded-2xl border border-[color:var(--brand)] bg-[color:var(--brand-soft)] px-4 py-4 text-sm leading-6 text-[color:var(--brand)]">
                   建档必填模块已经补齐，可以继续进入母版简历生成链路。
                 </div>
               )}
@@ -236,13 +236,13 @@ export function ProfileBuilder({ initialSnapshot }: ProfileBuilderProps) {
               <div className="flex flex-wrap gap-3">
                 <Link
                   href="/resumes"
-                  className="inline-flex rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
+                  className="inline-flex rounded-full bg-[color:var(--brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)]"
                 >
                   去简历中心
                 </Link>
                 <Link
                   href="/onboarding"
-                  className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                  className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
                 >
                   返回引导页
                 </Link>

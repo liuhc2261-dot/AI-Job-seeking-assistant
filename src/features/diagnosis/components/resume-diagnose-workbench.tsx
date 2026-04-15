@@ -103,7 +103,7 @@ function getSeverityLabel(severity: DiagnosisIssueRecord["severity"]) {
 function getSeverityClassName(severity: DiagnosisIssueRecord["severity"]) {
   switch (severity) {
     case "high":
-      return "border-rose-200 bg-rose-50 text-rose-700";
+      return "border-[color:var(--error)] bg-[color:var(--error-soft)] text-[color:var(--error)]";
     case "medium":
       return "border-amber-200 bg-amber-50 text-amber-700";
     case "low":
@@ -328,8 +328,8 @@ export function ResumeDiagnoseWorkbench({
           className={cn(
             "rounded-3xl border px-5 py-4 text-sm leading-6",
             notice.type === "success"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border-rose-200 bg-rose-50 text-rose-700",
+              ? "border-[color:var(--brand)] bg-[color:var(--brand-soft)] text-[color:var(--brand)]"
+              : "border-[color:var(--error)] bg-[color:var(--error-soft)] text-[color:var(--error)]",
           )}
         >
           {notice.message}
@@ -379,13 +379,13 @@ export function ResumeDiagnoseWorkbench({
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
                 href={`/resumes/${resumeId}/edit`}
-                className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
               >
                 先去编辑源版本
               </Link>
               <Link
                 href={`/resumes/${resumeId}/versions`}
-                className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
               >
                 查看版本链
               </Link>
@@ -408,7 +408,7 @@ export function ResumeDiagnoseWorkbench({
                 type="button"
                 onClick={handleDiagnose}
                 disabled={isDiagnosing}
-                className="inline-flex rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex rounded-full bg-[color:var(--brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isDiagnosing ? "诊断中..." : "运行简历诊断"}
               </button>
@@ -416,7 +416,7 @@ export function ResumeDiagnoseWorkbench({
                 type="button"
                 onClick={handleApplySuggestions}
                 disabled={selectedSuggestionIds.length === 0 || isApplying}
-                className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-semibold text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-semibold text-[color:var(--muted)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isApplying ? "应用中..." : "应用已勾选建议"}
               </button>
@@ -470,7 +470,7 @@ export function ResumeDiagnoseWorkbench({
                       {analysis.parsedKeywords.map((keyword) => (
                         <span
                           key={keyword}
-                          className="rounded-full bg-[color:var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--accent)]"
+                          className="rounded-full bg-[color:var(--brand-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--brand)]"
                         >
                           {keyword}
                         </span>
@@ -508,11 +508,11 @@ export function ResumeDiagnoseWorkbench({
             ) : (
               <div className="space-y-5">
                 <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-                  <div className="rounded-2xl bg-[color:var(--accent-soft)] px-4 py-4">
+                  <div className="rounded-2xl bg-[color:var(--brand-soft)] px-4 py-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
                       Overall
                     </p>
-                    <p className="mt-3 text-3xl font-semibold text-[color:var(--accent)]">
+                    <p className="mt-3 text-3xl font-semibold text-[color:var(--brand)]">
                       {report.scoreOverview.overall}
                     </p>
                   </div>
@@ -551,7 +551,7 @@ export function ResumeDiagnoseWorkbench({
                 诊断完成后，这里会列出内容、表达、结构、匹配和 ATS 五类问题。
               </div>
             ) : issueGroups.length === 0 ? (
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-6 text-sm leading-6 text-emerald-700">
+              <div className="rounded-2xl border border-[color:var(--brand)] bg-[color:var(--brand-soft)] px-4 py-6 text-sm leading-6 text-[color:var(--brand)]">
                 当前没有识别到明显高风险问题，可以继续围绕目标岗位做手动润色。
               </div>
             ) : (
@@ -559,7 +559,7 @@ export function ResumeDiagnoseWorkbench({
                 {issueGroups.map((group) => (
                   <div key={group.category} className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <span className="rounded-full bg-[color:var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--accent)]">
+                      <span className="rounded-full bg-[color:var(--brand-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--brand)]">
                         {getCategoryLabel(group.category)}
                       </span>
                       <p className="text-sm text-[color:var(--muted)]">
@@ -626,8 +626,8 @@ export function ResumeDiagnoseWorkbench({
                         "block rounded-2xl border px-4 py-4 transition",
                         suggestion.canAutoApply && suggestion.patch
                           ? isSelected
-                            ? "border-[color:var(--accent)] bg-[color:var(--accent-soft)]"
-                            : "border-[color:var(--border)] bg-white hover:border-[color:var(--accent)]"
+                            ? "border-[color:var(--brand)] bg-[color:var(--brand-soft)]"
+                            : "border-[color:var(--border)] bg-white hover:border-[color:var(--brand)]"
                           : "border-[color:var(--border)] bg-[color:var(--surface-strong)]",
                       )}
                     >
@@ -637,16 +637,16 @@ export function ResumeDiagnoseWorkbench({
                           checked={isSelected}
                           onChange={() => toggleSuggestion(suggestion.id)}
                           disabled={!suggestion.canAutoApply || !suggestion.patch}
-                          className="mt-1 h-4 w-4 rounded border-[color:var(--border)] text-[color:var(--accent)] disabled:cursor-not-allowed disabled:opacity-50"
+                          className="mt-1 h-4 w-4 rounded border-[color:var(--border)] text-[color:var(--brand)] disabled:cursor-not-allowed disabled:opacity-50"
                         />
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="font-medium text-slate-900">{suggestion.title}</p>
-                            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[color:var(--accent)]">
+                            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[color:var(--brand)]">
                               {getCategoryLabel(suggestion.category)}
                             </span>
                             {suggestion.canAutoApply && suggestion.patch ? (
-                              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                              <span className="rounded-full bg-[color:var(--brand-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--brand)]">
                                 可自动应用
                               </span>
                             ) : null}
@@ -677,7 +677,7 @@ export function ResumeDiagnoseWorkbench({
           >
             {appliedVersion ? (
               <div className="space-y-4">
-                <div className="rounded-2xl bg-[color:var(--accent-soft)] px-4 py-4">
+                <div className="rounded-2xl bg-[color:var(--brand-soft)] px-4 py-4">
                   <p className="font-medium">{appliedVersion.versionName}</p>
                   <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
                     {appliedVersion.changeSummary?.generationSummary ?? "新的诊断应用版本已生成。"}
@@ -718,7 +718,7 @@ export function ResumeDiagnoseWorkbench({
                     {formatDate(version.createdAt)}
                   </p>
                 </div>
-                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[color:var(--accent)]">
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[color:var(--brand)]">
                   {version.createdBy}
                 </span>
               </div>

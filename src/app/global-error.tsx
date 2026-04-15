@@ -24,8 +24,8 @@ export default function GlobalError({
     <html lang="zh-CN">
       <body className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
         <main className="mx-auto flex min-h-screen max-w-3xl items-center px-6 py-12">
-          <div className="w-full rounded-[32px] border border-rose-200 bg-white px-8 py-10 shadow-[0_24px_80px_-48px_rgba(13,68,72,0.55)]">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-600">
+          <div className="w-full rounded-[32px] border border-[color:var(--error)] bg-white px-8 py-10 shadow-[0_24px_80px_-48px_rgba(13,68,72,0.55)]">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[color:var(--error)]">
               App Error
             </p>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight">
@@ -40,13 +40,13 @@ export default function GlobalError({
               <button
                 type="button"
                 onClick={() => reset()}
-                className="inline-flex rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)]"
+                className="inline-flex rounded-full bg-[color:var(--brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)]"
               >
                 重新加载
               </button>
               <a
                 href="/dashboard"
-                className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                className="inline-flex rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
               >
                 返回工作台
               </a>

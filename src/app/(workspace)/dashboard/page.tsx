@@ -84,13 +84,13 @@ export default async function DashboardPage() {
           <>
             <Link
               href={nextAction.href}
-              className="rounded-full bg-[linear-gradient(135deg,var(--accent),var(--accent-strong))] px-5 py-3 text-sm font-semibold text-white transition hover:shadow-[0_18px_34px_-18px_rgba(15,106,111,0.7)]"
+              className="rounded-full bg-[linear-gradient(135deg,var(--brand),var(--brand-hover))] px-5 py-3 text-sm font-semibold text-white transition hover:shadow-[0_18px_34px_-18px_rgba(201,100,66,0.7)]"
             >
               {nextAction.action}
             </Link>
             <Link
               href="/onboarding"
-              className="rounded-full border border-[color:var(--border-strong)] px-5 py-3 text-sm font-semibold text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+              className="rounded-full border border-[color:var(--border-strong)] px-5 py-3 text-sm font-semibold text-[color:var(--foreground)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
             >
               查看主流程
             </Link>
@@ -143,14 +143,14 @@ export default async function DashboardPage() {
           <div className="flex flex-wrap gap-3">
             <Link
               href={nextAction.href}
-              className="rounded-full bg-[linear-gradient(135deg,var(--accent),var(--accent-strong))] px-5 py-3 text-sm font-semibold text-white transition hover:shadow-[0_18px_34px_-18px_rgba(15,106,111,0.7)]"
+              className="rounded-full bg-[linear-gradient(135deg,var(--brand),var(--brand-hover))] px-5 py-3 text-sm font-semibold text-white transition hover:shadow-[0_18px_34px_-18px_rgba(201,100,66,0.7)]"
             >
               {nextAction.action}
             </Link>
             {latestResume ? (
               <Link
                 href={`/resumes/${latestResume.id}/export`}
-                className="rounded-full border border-[color:var(--border-strong)] px-5 py-3 text-sm font-semibold text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                className="rounded-full border border-[color:var(--border-strong)] px-5 py-3 text-sm font-semibold text-[color:var(--foreground)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
               >
                 继续导出
               </Link>
@@ -173,7 +173,7 @@ export default async function DashboardPage() {
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
                       item.configured
-                        ? "bg-emerald-100 text-emerald-700"
+                        ? "bg-[color:var(--brand-soft)] text-[color:var(--brand)]"
                         : "bg-amber-100 text-amber-700"
                     }`}
                   >
@@ -203,7 +203,7 @@ export default async function DashboardPage() {
               </span>
               <Link
                 href={card.href}
-                className="text-sm font-semibold text-[color:var(--accent)] transition hover:text-[color:var(--accent-strong)]"
+                className="text-sm font-semibold text-[color:var(--brand)] transition hover:text-[color:var(--brand-hover)]"
               >
                 {card.action}
               </Link>
@@ -239,7 +239,7 @@ export default async function DashboardPage() {
                     </div>
                     <Link
                       href={`/resumes/${resume.id}`}
-                      className="rounded-full border border-[color:var(--border-strong)] px-4 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                      className="rounded-full border border-[color:var(--border-strong)] px-4 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
                     >
                       继续推进
                     </Link>

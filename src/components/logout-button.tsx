@@ -17,7 +17,7 @@ export function LogoutButton() {
           await signOut({ callbackUrl: "/" });
         })
       }
-      className="rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+      className="rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
     >
       {isPending ? "退出中..." : "退出登录"}
     </button>

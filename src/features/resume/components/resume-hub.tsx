@@ -128,8 +128,8 @@ export function ResumeHub({ initialData }: ResumeHubProps) {
           className={cn(
             "rounded-3xl border px-5 py-4 text-sm leading-6",
             notice.type === "success"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border-rose-200 bg-rose-50 text-rose-700",
+              ? "border-[color:var(--brand)] bg-[color:var(--brand-soft)] text-[color:var(--brand)]"
+              : "border-[color:var(--error)] bg-[color:var(--error-soft)] text-[color:var(--error)]",
           )}
         >
           {notice.message}
@@ -149,7 +149,7 @@ export function ResumeHub({ initialData }: ResumeHubProps) {
                 {initialData.missingProfileModules.join("、")}
               </div>
             ) : (
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm leading-6 text-emerald-700">
+              <div className="rounded-2xl border border-[color:var(--brand)] bg-[color:var(--brand-soft)] px-4 py-4 text-sm leading-6 text-[color:var(--brand)]">
                 建档必填模块已补齐，可以开始生成母版简历。
               </div>
             )}
@@ -186,13 +186,13 @@ export function ResumeHub({ initialData }: ResumeHubProps) {
                 type="button"
                 disabled={!initialData.canGenerate || isPending}
                 onClick={handleGenerate}
-                className="inline-flex rounded-full bg-[linear-gradient(135deg,var(--accent),var(--accent-strong))] px-5 py-3 text-sm font-semibold text-white transition hover:shadow-[0_18px_34px_-18px_rgba(15,106,111,0.7)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex rounded-full bg-[linear-gradient(135deg,var(--brand),var(--brand-hover))] px-5 py-3 text-sm font-semibold text-white transition hover:shadow-[0_18px_34px_-18px_rgba(201,100,66,0.7)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isPending ? "生成中..." : "生成母版简历"}
               </button>
               <Link
                 href="/profile"
-                className="inline-flex rounded-full border border-[color:var(--border-strong)] px-5 py-3 text-sm font-medium text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                className="inline-flex rounded-full border border-[color:var(--border-strong)] px-5 py-3 text-sm font-medium text-[color:var(--foreground)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
               >
                 继续完善建档
               </Link>
@@ -234,14 +234,14 @@ export function ResumeHub({ initialData }: ResumeHubProps) {
               className={cn(
                 "rounded-3xl border px-5 py-5 text-left transition",
                 selectedStyle === style.id
-                  ? "border-[color:var(--accent)] bg-[linear-gradient(180deg,rgba(15,106,111,0.12),rgba(255,255,255,0.88))] shadow-[0_20px_42px_-32px_rgba(15,106,111,0.85)]"
-                  : "border-[color:var(--border)] bg-white/76 hover:border-[color:var(--accent-soft-strong)]",
+                  ? "border-[color:var(--brand)] bg-[linear-gradient(180deg,rgba(201,100,66,0.12),rgba(255,255,255,0.88))] shadow-[0_20px_42px_-32px_rgba(201,100,66,0.85)]"
+                  : "border-[color:var(--border)] bg-white/76 hover:border-[color:var(--brand-soft-strong)]",
               )}
             >
               <div className="flex items-center justify-between gap-4">
                 <p className="font-semibold text-[color:var(--foreground)]">{style.label}</p>
                 {selectedStyle === style.id ? (
-                  <span className="rounded-full bg-[color:var(--accent)] px-3 py-1 text-xs font-semibold text-white">
+                  <span className="rounded-full bg-[color:var(--brand)] px-3 py-1 text-xs font-semibold text-white">
                     当前选择
                   </span>
                 ) : null}
@@ -280,7 +280,7 @@ export function ResumeHub({ initialData }: ResumeHubProps) {
                         {formatDate(resume.updatedAt)}
                       </p>
                     </div>
-                    <span className="rounded-full bg-[color:var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--accent)]">
+                    <span className="rounded-full bg-[color:var(--brand-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--brand)]">
                       {resume.status === "active" ? "进行中" : "草稿"}
                     </span>
                   </div>
@@ -294,19 +294,19 @@ export function ResumeHub({ initialData }: ResumeHubProps) {
                   <div className="mt-5 flex flex-wrap gap-3">
                     <Link
                       href={`/resumes/${resume.id}`}
-                      className="inline-flex rounded-full bg-[color:var(--accent)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[color:var(--accent-strong)]"
+                      className="inline-flex rounded-full bg-[color:var(--brand)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[color:var(--brand-hover)]"
                     >
                       查看详情
                     </Link>
                     <Link
                       href={`/resumes/${resume.id}/edit`}
-                      className="inline-flex rounded-full border border-[color:var(--border-strong)] px-4 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                      className="inline-flex rounded-full border border-[color:var(--border-strong)] px-4 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
                     >
                       继续编辑
                     </Link>
                     <Link
                       href={`/resumes/${resume.id}/optimize`}
-                      className="inline-flex rounded-full border border-[color:var(--border-strong)] px-4 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                      className="inline-flex rounded-full border border-[color:var(--border-strong)] px-4 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
                     >
                       JD 定制
                     </Link>
@@ -326,7 +326,7 @@ export function ResumeHub({ initialData }: ResumeHubProps) {
             <ol className="space-y-4">
               {initialData.lifecycleSteps.map((step, index) => (
                 <li key={step.title} className="flex gap-4">
-                  <span className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--accent-soft)] text-sm font-semibold text-[color:var(--accent)]">
+                  <span className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--brand-soft)] text-sm font-semibold text-[color:var(--brand)]">
                     {index + 1}
                   </span>
                   <div>

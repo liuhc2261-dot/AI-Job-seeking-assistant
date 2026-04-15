@@ -1,40 +1,88 @@
 @import "tailwindcss";
 
+/*
+  DESIGN.md (Claude-inspired) palette
+  - Warm parchment canvas (no cool grays anywhere)
+  - Terracotta brand accent
+  - Ring-shadow depth system (0px 0px 0px 1px)
+*/
+
 :root {
-  --background: #efe5d4;
-  --background-alt: #e3d6c0;
+  /* Brand */
+  --brand: #c96442;
+  --brand-hover: #b85a38;
+  --brand-soft: rgba(201, 100, 66, 0.12);
+  --brand-soft-strong: rgba(201, 100, 66, 0.22);
+
+  /* Background & Surface */
+  --background: #f5f4ed;
+  --background-alt: #efe5d4;
   --surface: rgba(255, 251, 244, 0.8);
   --surface-strong: rgba(255, 252, 247, 0.96);
   --surface-muted: rgba(50, 41, 32, 0.05);
-  --foreground: #1f2321;
-  --muted: #6a6359;
-  --muted-strong: #49433d;
+
+  /* Foreground / Text */
+  --foreground: #141413;
+  --foreground-secondary: #3d3d3a;
+  --muted: #5e5d59;
+  --muted-strong: #4d4c48;
+  --muted-light: #87867f;
+
+  /* Borders */
   --border: rgba(39, 33, 29, 0.12);
   --border-strong: rgba(39, 33, 29, 0.18);
-  --accent: #0f6a6f;
-  --accent-strong: #0a4d52;
-  --accent-soft: rgba(15, 106, 111, 0.12);
-  --accent-soft-strong: rgba(15, 106, 111, 0.22);
-  --highlight: #b76f3c;
-  --highlight-soft: rgba(183, 111, 60, 0.12);
+  --border-cream: #f0eee6;
+  --border-warm: #e8e6dc;
+
+  /* Semantic */
+  --error: #b53333;
+  --error-soft: rgba(181, 51, 51, 0.1);
+
+  /* Ring shadows */
+  --ring-warm: #d1cfc5;
+  --ring-subtle: #dedc01;
+  --ring-deep: #c2c0b6;
+
+  /* Dark surfaces (for dark-theme / inverted sections) */
+  --dark-surface: #30302e;
+  --dark-deep: #141413;
+  --dark-text: #b0aea5;
+  --dark-border: #30302e;
 }
 
 @theme inline {
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-soft-strong: var(--brand-soft-strong);
+
   --color-background: var(--background);
+  --color-background-alt: var(--background-alt);
   --color-surface: var(--surface);
   --color-surface-strong: var(--surface-strong);
   --color-surface-muted: var(--surface-muted);
+
   --color-foreground: var(--foreground);
+  --color-foreground-secondary: var(--foreground-secondary);
   --color-muted: var(--muted);
   --color-muted-strong: var(--muted-strong);
+  --color-muted-light: var(--muted-light);
+
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
-  --color-accent: var(--accent);
-  --color-accent-strong: var(--accent-strong);
-  --color-accent-soft: var(--accent-soft);
-  --color-accent-soft-strong: var(--accent-soft-strong);
-  --color-highlight: var(--highlight);
-  --color-highlight-soft: var(--highlight-soft);
+  --color-border-cream: var(--border-cream);
+  --color-border-warm: var(--border-warm);
+
+  --color-error: var(--error);
+  --color-error-soft: var(--error-soft);
+
+  --color-dark-surface: var(--dark-surface);
+  --color-dark-deep: var(--dark-deep);
+  --color-dark-text: var(--dark-text);
+
+  --color-ring-warm: var(--ring-warm);
+  --color-ring-deep: var(--ring-deep);
+
   --font-sans: var(--font-app-sans);
   --font-mono: var(--font-app-mono);
 }
@@ -52,9 +100,9 @@ body {
   color: var(--foreground);
   font-family: var(--font-app-sans), sans-serif;
   background:
-    radial-gradient(circle at top left, rgba(15, 106, 111, 0.18), transparent 24%),
-    radial-gradient(circle at top right, rgba(183, 111, 60, 0.18), transparent 26%),
-    linear-gradient(180deg, #fcf7ef 0%, #f4ebdc 46%, #efe5d4 100%);
+    radial-gradient(circle at top left, rgba(201, 100, 66, 0.12), transparent 28%),
+    radial-gradient(circle at top right, rgba(94, 93, 89, 0.08), transparent 24%),
+    linear-gradient(180deg, #faf9f5 0%, #f5f4ed 50%, #f0eee6 100%);
   background-attachment: fixed;
 }
 
@@ -64,10 +112,10 @@ body::before {
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(rgba(31, 35, 33, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(31, 35, 33, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(20, 20, 19, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 20, 19, 0.025) 1px, transparent 1px);
   background-size: 24px 24px;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.14), transparent 48%);
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.1), transparent 48%);
 }
 
 a {
@@ -95,10 +143,10 @@ select {
 input:focus,
 textarea:focus,
 select:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px rgba(15, 106, 111, 0.12);
+  border-color: var(--brand);
+  box-shadow: 0 0 0 4px rgba(201, 100, 66, 0.1);
 }
 
 ::selection {
-  background: rgba(15, 106, 111, 0.18);
+  background: rgba(201, 100, 66, 0.18);
 }

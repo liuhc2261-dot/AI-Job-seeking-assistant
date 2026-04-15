@@ -91,8 +91,8 @@ export function ResumeDiffView({
                     section.changeKind === "updated"
                       ? "bg-amber-50 text-amber-700"
                       : section.changeKind === "added"
-                        ? "bg-emerald-50 text-emerald-700"
-                        : "bg-rose-50 text-rose-700",
+                        ? "bg-[color:var(--brand-soft)] text-[color:var(--brand)]"
+                        : "bg-[color:var(--error-soft)] text-[color:var(--error)]",
                   )}
                 >
                   {getChangeLabel(section.changeKind)}
@@ -108,8 +108,8 @@ export function ResumeDiffView({
                     {renderLines(section.before, "这一块在来源版本里为空。")}
                   </div>
                 </div>
-                <div className="rounded-3xl border border-[color:var(--accent-soft-strong)] bg-[linear-gradient(180deg,rgba(15,106,111,0.1),rgba(255,255,255,0.88))] px-4 py-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--accent)]">
+                <div className="rounded-3xl border border-[color:var(--brand-soft-strong)] bg-[linear-gradient(180deg,rgba(201,100,66,0.1),rgba(255,255,255,0.88))] px-4 py-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--brand)]">
                     当前版本
                   </p>
                   <div className="mt-3">

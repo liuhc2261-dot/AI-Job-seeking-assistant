@@ -106,22 +106,22 @@ export function ForgotPasswordForm() {
           type="email"
           defaultValue={state.email}
           placeholder="you@example.com"
-          className="w-full rounded-2xl border border-[color:var(--border)] bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[color:var(--accent)]"
+          className="w-full rounded-2xl border border-[color:var(--border)] bg-white/80 px-4 py-3 text-sm outline-none transition focus:border-[color:var(--brand)]"
         />
         {state.fieldErrors?.email?.[0] ? (
-          <p className="text-sm text-rose-600">{state.fieldErrors.email[0]}</p>
+          <p className="text-sm text-[color:var(--error)]">{state.fieldErrors.email[0]}</p>
         ) : null}
       </div>
 
       {state.message ? (
-        <div className="space-y-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <div className="space-y-3 rounded-2xl border border-[color:var(--brand)] bg-[color:var(--brand-soft)] px-4 py-3 text-sm text-[color:var(--brand)]">
           <p>{state.message}</p>
           {state.developmentResetLink ? (
             <p className="break-all">
               开发环境重置链接：
               <Link
                 href={state.developmentResetLink}
-                className="ml-1 font-medium text-[color:var(--accent)]"
+                className="ml-1 font-medium text-[color:var(--brand)]"
               >
                 {state.developmentResetLink}
               </Link>
@@ -133,14 +133,14 @@ export function ForgotPasswordForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="w-full rounded-full bg-[color:var(--accent)] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-70"
+        className="w-full rounded-full bg-[color:var(--brand)] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-hover)] disabled:cursor-not-allowed disabled:opacity-70"
       >
         {isPending ? "提交中..." : "发送重置入口"}
       </button>
 
       <p className="text-sm text-[color:var(--muted)]">
         想起密码了？
-        <Link href="/login" className="ml-1 font-medium text-[color:var(--accent)]">
+        <Link href="/login" className="ml-1 font-medium text-[color:var(--brand)]">
           返回登录
         </Link>
       </p>

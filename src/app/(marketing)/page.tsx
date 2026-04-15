@@ -100,7 +100,7 @@ export default async function HomePage() {
                   {["真实边界", "岗位定制", "版本可回滚", "ATS 友好导出"].map((item) => (
                     <span
                       key={item}
-                      className="rounded-full border border-[color:var(--accent-soft-strong)] bg-white/70 px-3 py-2 text-sm font-medium text-[color:var(--accent)]"
+                      className="rounded-full border border-[color:var(--brand-soft-strong)] bg-white/70 px-3 py-2 text-sm font-medium text-[color:var(--brand)]"
                     >
                       {item}
                     </span>
@@ -131,13 +131,13 @@ export default async function HomePage() {
                 <div className="flex flex-wrap gap-3">
                   <Link
                     href={session?.user ? "/dashboard" : "/register"}
-                    className="rounded-full bg-[linear-gradient(135deg,var(--accent),var(--accent-strong))] px-5 py-3 text-sm font-semibold text-white transition hover:shadow-[0_18px_34px_-18px_rgba(15,106,111,0.7)]"
+                    className="rounded-full bg-[linear-gradient(135deg,var(--brand),var(--brand-hover))] px-5 py-3 text-sm font-semibold text-white transition hover:shadow-[0_18px_34px_-18px_rgba(201,100,66,0.7)]"
                   >
                     {session?.user ? "回到工作台" : "创建账号并开始建档"}
                   </Link>
                   <Link
                     href={session?.user ? "/resumes" : "/login"}
-                    className="rounded-full border border-[color:var(--border-strong)] px-5 py-3 text-sm font-semibold text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                    className="rounded-full border border-[color:var(--border-strong)] px-5 py-3 text-sm font-semibold text-[color:var(--foreground)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
                   >
                     {session?.user ? "查看简历中心" : "已有账号，直接登录"}
                   </Link>
@@ -145,7 +145,7 @@ export default async function HomePage() {
               </div>
 
               <div className="rounded-[28px] border border-[color:var(--border-strong)] bg-[rgba(255,255,255,0.76)] p-5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--accent)]">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--brand)]">
                   为什么更容易上手
                 </p>
                 <div className="mt-4 space-y-4">
@@ -192,7 +192,7 @@ export default async function HomePage() {
 
         <section id="workflow" className="space-y-4">
           <div className="space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[color:var(--accent)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[color:var(--brand)]">
               Workflow
             </p>
             <h2 className="text-2xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-3xl">
@@ -208,7 +208,7 @@ export default async function HomePage() {
                 description={item.description}
                 className="h-full"
               >
-                <span className="inline-flex rounded-full bg-[color:var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--accent)]">
+                <span className="inline-flex rounded-full bg-[color:var(--brand-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--brand)]">
                   {item.step}
                 </span>
               </SectionCard>
@@ -310,13 +310,13 @@ export default async function HomePage() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href={session?.user ? "/dashboard" : "/register"}
-                className="rounded-full bg-[linear-gradient(135deg,var(--accent),var(--accent-strong))] px-5 py-3 text-sm font-semibold text-white transition hover:shadow-[0_18px_34px_-18px_rgba(15,106,111,0.7)]"
+                className="rounded-full bg-[linear-gradient(135deg,var(--brand),var(--brand-hover))] px-5 py-3 text-sm font-semibold text-white transition hover:shadow-[0_18px_34px_-18px_rgba(201,100,66,0.7)]"
               >
                 {session?.user ? "进入工作台" : "注册并开始使用"}
               </Link>
               <Link
                 href={session?.user ? "/resumes" : "/login"}
-                className="rounded-full border border-[color:var(--border-strong)] px-5 py-3 text-sm font-semibold text-[color:var(--foreground)] transition hover:border-[color:var(--accent)] hover:text-[color:var(--accent)]"
+                className="rounded-full border border-[color:var(--border-strong)] px-5 py-3 text-sm font-semibold text-[color:var(--foreground)] transition hover:border-[color:var(--brand)] hover:text-[color:var(--brand)]"
               >
                 {session?.user ? "打开简历中心" : "登录已有账号"}
               </Link>

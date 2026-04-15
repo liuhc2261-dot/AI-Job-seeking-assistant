@@ -38,10 +38,22 @@ const pdfTemplateName = "ats-standard";
 
 const exportTemplates: ExportTemplate[] = [
   {
-    id: pdfTemplateName,
+    id: "ats-standard",
     name: "标准 ATS 模板",
     description: "单栏、清晰、稳定，优先保证中文排版和 ATS 友好的投递可读性。",
     recommendedFor: "校园招聘 / 实习投递 / 通用岗位",
+  },
+  {
+    id: "clean-tech",
+    name: "简洁技术岗模板",
+    description: "极简等宽字体风格，强调技术栈和项目细节，适合互联网技术岗位。",
+    recommendedFor: "互联网技术岗 / 研发 / 算法 / 后端",
+  },
+  {
+    id: "creative",
+    name: "创意双栏模板",
+    description: "左右双栏布局，左侧彩色边栏展示联系人和技能，视觉层次丰富。",
+    recommendedFor: "设计 / 产品 / 运营 / 创意类岗位",
   },
 ];
 

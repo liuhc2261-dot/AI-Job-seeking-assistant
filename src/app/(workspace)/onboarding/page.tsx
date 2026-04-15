@@ -28,7 +28,7 @@ export default async function OnboardingPage() {
         actions={
           <Link
             href="/profile"
-            className="rounded-full bg-[linear-gradient(135deg,var(--accent),var(--accent-strong))] px-5 py-3 text-sm font-semibold text-white transition hover:shadow-[0_18px_34px_-18px_rgba(15,106,111,0.7)]"
+            className="rounded-full bg-[linear-gradient(135deg,var(--brand),var(--brand-hover))] px-5 py-3 text-sm font-semibold text-white transition hover:shadow-[0_18px_34px_-18px_rgba(201,100,66,0.7)]"
           >
             继续完善资料建档
           </Link>
@@ -82,7 +82,7 @@ export default async function OnboardingPage() {
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-semibold ${
                         completed
-                          ? "bg-emerald-100 text-emerald-700"
+                          ? "bg-[color:var(--brand-soft)] text-[color:var(--brand)]"
                           : item.required
                             ? "bg-amber-100 text-amber-700"
                             : "bg-slate-100 text-slate-700"
